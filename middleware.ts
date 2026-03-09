@@ -1,46 +1,24 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  const isProtected = request.nextUrl.pathname.startsWith('/admin/dashboard')
+  const isLoginPage = request.nextUrl.pathname === '/admin'
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+  const token =
+    request.cookies.get('sb-gysddrbfhwxzrhamzjgg-auth-token')?.value ||
+    request.cookies.get('sb-access-token')?.value
 
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
-  const isLoginPage = request.nextUrl.pathname === '/login'
-
-  if (isAdminRoute && !user) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  if (isLoginPage && user) {
+  if (isProtected && !token) {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
 
-  return supabaseResponse
+  if (isLoginPage && token) {
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url))
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/login'],
+  matcher: ['/admin', '/admin/dashboard/:path*'],
 }
