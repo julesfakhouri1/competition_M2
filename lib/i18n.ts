@@ -6,11 +6,23 @@ export const translations = {
     title: 'Enchanted Tools',
     subtitle: 'Expérience interactive',
     discover: "Découvrir l'espace",
+    baseline: 'Robotics Experience',
+    heroTitle: 'Bienvenue dans le monde des robots',
+    heroDesc: "Découvrez l'univers fascinant de la robotique et de l'intelligence artificielle. Une expérience interactive pour toute la famille.",
+    cta: "Commencer l'expérience",
+    games: 'Jeux',
+    skipLink: 'Aller au contenu principal',
   },
   en: {
     title: 'Enchanted Tools',
     subtitle: 'Interactive experience',
     discover: 'Discover the space',
+    baseline: 'Robotics Experience',
+    heroTitle: 'Welcome to the world of robots',
+    heroDesc: 'Discover the fascinating world of robotics and artificial intelligence. An interactive experience for the whole family.',
+    cta: 'Start the experience',
+    games: 'Games',
+    skipLink: 'Skip to main content',
   },
 } satisfies Record<Locale, Record<string, string>>
 

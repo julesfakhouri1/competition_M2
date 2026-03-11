@@ -1,12 +1,19 @@
 'use client'
 
 import Image from 'next/image'
+import { useEffect, useState } from 'react'
 import { Outfit, Rajdhani } from 'next/font/google'
+import LangSwitcher from '@/components/LangSwitcher'
+import { type Locale, getLocaleFromCookie, translations } from '@/lib/i18n'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800', '900'] })
 const rajdhani = Rajdhani({ subsets: ['latin'], weight: ['600', '700'] })
 
 export default function LandingPage() {
+  const [locale, setLocale] = useState<Locale>('fr')
+  useEffect(() => { setLocale(getLocaleFromCookie()) }, [])
+  const t = translations[locale]
+
   return (
     <>
       <style>{`
@@ -85,7 +92,12 @@ export default function LandingPage() {
           height: '100dvh',
         }}
       >
-        <a href="#et-content" className="et-skip">Aller au contenu principal</a>
+        <a href="#et-content" className="et-skip">{t.skipLink}</a>
+
+        {/* Sélecteur de langue */}
+        <div className="fixed top-6 right-6 z-50">
+          <LangSwitcher locale={locale} onLocaleChange={setLocale} />
+        </div>
 
         {/* Halos décoratifs */}
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -138,7 +150,7 @@ export default function LandingPage() {
                 color: 'rgba(188,205,232,0.92)',
                 marginTop: '4px', letterSpacing: '0.06em',
               }}>
-                Robotics Experience
+                {t.baseline}
               </p>
             </div>
           </div>
@@ -153,16 +165,14 @@ export default function LandingPage() {
                 lineHeight: '1.18', margin: '0 0 10px',
               }}
             >
-              Bienvenue dans le monde des robots
+              {t.heroTitle}
             </h1>
             <p style={{
               fontSize: '14px', fontWeight: 400,
               color: 'rgba(178,196,228,0.92)',
               lineHeight: '1.6', margin: 0,
             }}>
-              Découvrez l&apos;univers fascinant de la robotique et de
-              l&apos;intelligence artificielle. Une expérience interactive
-              pour toute la famille.
+              {t.heroDesc}
             </p>
           </section>
 
@@ -194,7 +204,7 @@ export default function LandingPage() {
             <button
               type="button"
               className="et-btn-primary w-full"
-              aria-label="Commencer l'expérience Enchanted Tools"
+              aria-label={t.cta}
               style={{
                 minHeight: '52px',
                 padding: '14px 32px', borderRadius: '999px',
@@ -206,13 +216,13 @@ export default function LandingPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
               }}
             >
-              Commencer l&apos;expérience <span aria-hidden="true">→</span>
+              {t.cta} <span aria-hidden="true">→</span>
             </button>
 
             <button
               type="button"
               className="et-btn-sec w-full"
-              aria-label="Accéder aux jeux interactifs"
+              aria-label={t.games}
               style={{
                 minHeight: '48px',
                 padding: '13px 16px', borderRadius: '14px',
@@ -222,7 +232,7 @@ export default function LandingPage() {
                 fontWeight: 500, fontFamily: 'inherit',
               }}
             >
-              Jeux
+              {t.games}
             </button>
           </div>
 
