@@ -27,13 +27,24 @@ export default function ModulesPage() {
     })
   }
 
-  function handleValidate() {
+  async function handleValidate() {
     if (selected.size === 0) return
     setLoading(true)
-    if (typeof window !== 'undefined') {
+    try {
       const choices = [...selected].map(i => items[i])
-      const current = JSON.parse(localStorage.getItem('et_visitor') ?? '{}')
+      const current = typeof window !== 'undefined'
+        ? JSON.parse(localStorage.getItem('et_visitor') ?? '{}')
+        : {}
+      const { saveVisitor } = await import('@/lib/actions')
+      await saveVisitor({
+        first_name: current.firstName ?? '',
+        email:      current.email     ?? '',
+        age:        current.age       ?? '',
+        activities: choices,
+      })
       localStorage.setItem('et_visitor', JSON.stringify({ ...current, activities: choices }))
+    } catch {
+      // Silencieux — l'expérience continue même si la sauvegarde échoue
     }
     router.push('/')
   }
@@ -68,7 +79,7 @@ export default function ModulesPage() {
       `}</style>
 
       <main
-        className={`${outfit.className} relative flex flex-col overflow-hidden`}
+        className={`${outfit.className} relative flex flex-col`}
         style={{
           height: '100dvh',
           background: 'linear-gradient(180deg, #0D1B35 0%, #1B1042 52%, #0E0820 100%)',
@@ -84,76 +95,79 @@ export default function ModulesPage() {
           <div style={{ position:'absolute', bottom:'-60px', right:'-60px', width:'300px', height:'300px', borderRadius:'50%', background:'radial-gradient(circle, rgba(195,66,150,0.2) 0%, transparent 62%)' }} />
         </div>
 
-        {/* En-tête */}
-        <div className="relative z-10 mb-8">
-          <p style={{ fontFamily: rajdhani.style.fontFamily, fontSize: '12px', fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(0,200,255,0.75)', textTransform: 'uppercase', marginBottom: '6px' }}>
-            Enchanted Tools
-          </p>
-          <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#ffffff', lineHeight: 1.2, marginBottom: '4px' }}>
-            {t.checklistTitle}
-          </h1>
-          <p style={{ fontSize: '13px', color: 'rgba(188,205,232,0.55)' }}>
-            {t.checklistSubtitle}
-          </p>
-        </div>
+        {/* Contenu scrollable (header + liste) */}
+        <div className="relative z-10 flex-1 flex flex-col overflow-y-auto overflow-x-hidden">
+          {/* En-tête */}
+          <div className="mb-8">
+            <p style={{ fontFamily: rajdhani.style.fontFamily, fontSize: '12px', fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(0,200,255,0.75)', textTransform: 'uppercase', marginBottom: '6px' }}>
+              Enchanted Tools
+            </p>
+            <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#ffffff', lineHeight: 1.2, marginBottom: '4px' }}>
+              {t.checklistTitle}
+            </h1>
+            <p style={{ fontSize: '13px', color: 'rgba(188,205,232,0.55)' }}>
+              {t.checklistSubtitle}
+            </p>
+          </div>
 
-        {/* Liste — flex-1 pour prendre l'espace dispo */}
-        <div className="relative z-10 flex flex-col gap-3 flex-1 justify-center">
-          {items.map((item, i) => {
-            const checked = selected.has(i)
-            return (
-              <button
-                key={i}
-                type="button"
-                role="checkbox"
-                aria-checked={checked}
-                onClick={() => toggle(i)}
-                className="et-item flex items-center gap-4 w-full rounded-2xl px-5"
-                style={{
-                  animationDelay: `${i * 0.07}s`,
-                  height: '60px',
-                  background: checked ? 'rgba(0,200,255,0.08)' : 'rgba(255,255,255,0.05)',
-                  borderWidth: '1.5px',
-                  borderStyle: 'solid',
-                  borderColor: checked ? 'rgba(0,200,255,0.5)' : 'rgba(255,255,255,0.1)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                }}
-              >
-                {/* Checkbox */}
-                <span
-                  className="flex-shrink-0 flex items-center justify-center rounded-md"
+          {/* Liste */}
+          <div className="flex flex-col gap-3 pb-4">
+            {items.map((item, i) => {
+              const checked = selected.has(i)
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  role="checkbox"
+                  aria-checked={checked}
+                  onClick={() => toggle(i)}
+                  className="et-item flex items-center gap-4 w-full rounded-2xl px-5"
                   style={{
-                    width: '22px', height: '22px',
+                    animationDelay: `${i * 0.07}s`,
+                    height: '60px',
+                    background: checked ? 'rgba(0,200,255,0.08)' : 'rgba(255,255,255,0.05)',
                     borderWidth: '1.5px',
                     borderStyle: 'solid',
-                    borderColor: checked ? '#00C8FF' : 'rgba(255,255,255,0.35)',
-                    background: checked ? 'linear-gradient(135deg, #00C8FF, #0092F7)' : 'transparent',
-                    transition: 'all 0.18s ease',
-                    flexShrink: 0,
+                    borderColor: checked ? 'rgba(0,200,255,0.5)' : 'rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
                   }}
                 >
-                  {checked && (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
-                </span>
+                  {/* Checkbox */}
+                  <span
+                    className="flex-shrink-0 flex items-center justify-center rounded-md"
+                    style={{
+                      width: '22px', height: '22px',
+                      borderWidth: '1.5px',
+                      borderStyle: 'solid',
+                      borderColor: checked ? '#00C8FF' : 'rgba(255,255,255,0.35)',
+                      background: checked ? 'linear-gradient(135deg, #00C8FF, #0092F7)' : 'transparent',
+                      transition: 'all 0.18s ease',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {checked && (
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </span>
 
-                {/* Label */}
-                <span
-                  className="text-sm font-medium truncate"
-                  style={{ color: checked ? '#ffffff' : 'rgba(188,205,232,0.85)' }}
-                >
-                  {item}
-                </span>
-              </button>
-            )
-          })}
+                  {/* Label */}
+                  <span
+                    className="text-sm font-medium truncate"
+                    style={{ color: checked ? '#ffffff' : 'rgba(188,205,232,0.85)' }}
+                  >
+                    {item}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
-        {/* Bouton valider */}
-        <div className="relative z-10 mt-8">
+        {/* Bouton valider (pied de page fixe dans le viewport) */}
+        <div className="relative z-10 mt-4">
           <button
             type="button"
             onClick={handleValidate}

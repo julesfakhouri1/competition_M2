@@ -19,10 +19,10 @@ export const translations = {
     formPrivacy: 'Vos données sont sécurisées et confidentielles',
     formErrorRequired: 'Veuillez remplir tous les champs.',
     formErrorEmail: 'Veuillez entrer une adresse email valide.',
-    checklistTitle: 'Que souhaitez-vous faire ?',
-    checklistSubtitle: 'Choisissez une ou plusieurs activités',
+    checklistTitle: 'Que souhaitez-vous visiter ?',
+    checklistSubtitle: 'Sélectionnez un ou plusieurs modules',
     checklistValidate: 'Valider ma sélection',
-    checklistItems: 'Serrer la main|Prendre une photo ensemble|Avoir une conversation|Danser avec Mirokaï|Jouer à un jeu',
+    checklistItems: 'La naissance d\'Enchanted Tools|L\'histoire des Mirokaï|Le design|Électronique sur table|La combinaison des Mirokaï|Pendule inversé|La vision du robot|L\'IA du robot|Cas d\'usage|Salle de cyclage|Fresque récapitulative',
   },
   en: {
     title: 'Enchanted Tools',
@@ -41,10 +41,10 @@ export const translations = {
     formPrivacy: 'Your data is secure and confidential',
     formErrorRequired: 'Please fill in all fields.',
     formErrorEmail: 'Please enter a valid email address.',
-    checklistTitle: 'What would you like to do?',
-    checklistSubtitle: 'Choose one or more activities',
+    checklistTitle: 'What would you like to visit?',
+    checklistSubtitle: 'Select one or more modules',
     checklistValidate: 'Confirm my selection',
-    checklistItems: 'Shake hands|Take a photo together|Have a conversation|Dance with Mirokaï|Play a game',
+    checklistItems: 'The birth of Enchanted Tools|The story of the Mirokaï|Design|Tabletop electronics|The Mirokaï suit|Inverted pendulum|Robot vision|Robot AI|Use cases|Cycling room|Recap fresco',
   },
 } satisfies Record<Locale, Record<string, string>>
 
