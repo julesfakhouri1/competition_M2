@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Outfit, Rajdhani } from 'next/font/google'
 import LangSwitcher from '@/components/LangSwitcher'
 import { type Locale, getLocaleFromCookie, translations } from '@/lib/i18n'
@@ -10,6 +11,7 @@ const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700',
 const rajdhani = Rajdhani({ subsets: ['latin'], weight: ['600', '700'] })
 
 export default function LandingPage() {
+  const router = useRouter()
   const [locale, setLocale] = useState<Locale>('fr')
   useEffect(() => { setLocale(getLocaleFromCookie()) }, [])
   const t = translations[locale]
@@ -205,6 +207,7 @@ export default function LandingPage() {
               type="button"
               className="et-btn-primary w-full"
               aria-label={t.cta}
+              onClick={() => router.push('/experience')}
               style={{
                 minHeight: '52px',
                 padding: '14px 32px', borderRadius: '999px',

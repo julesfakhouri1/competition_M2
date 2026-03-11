@@ -73,7 +73,9 @@ export default function LoginPage() {
             className="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-[rgba(188,205,232,0.4)] focus:outline-none transition-colors"
             style={{
               background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.12)',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: 'rgba(255,255,255,0.12)',
             }}
             onFocus={(e) => e.currentTarget.style.borderColor = 'rgba(0,200,255,0.5)'}
             onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'}
@@ -87,7 +89,9 @@ export default function LoginPage() {
             className="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-[rgba(188,205,232,0.4)] focus:outline-none transition-colors"
             style={{
               background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.12)',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: 'rgba(255,255,255,0.12)',
             }}
             onFocus={(e) => e.currentTarget.style.borderColor = 'rgba(0,200,255,0.5)'}
             onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'}
