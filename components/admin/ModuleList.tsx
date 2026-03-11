@@ -10,6 +10,10 @@ interface ModuleListProps {
   modules: Module[]
 }
 
+const border = '1px solid rgba(255,255,255,0.08)'
+const textMuted = 'rgba(188,205,232,0.55)'
+const textSub   = 'rgba(188,205,232,0.75)'
+
 export default function ModuleList({ modules }: ModuleListProps) {
   const router = useRouter()
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -30,11 +34,16 @@ export default function ModuleList({ modules }: ModuleListProps) {
 
   if (modules.length === 0) {
     return (
-      <div className="border border-zinc-800 rounded-lg p-12 text-center">
-        <p className="text-zinc-500 text-sm">Aucun module pour l&apos;instant.</p>
+      <div
+        className="rounded-xl p-12 text-center"
+        style={{ border, background: 'rgba(255,255,255,0.03)' }}
+      >
+        <p className="text-sm mb-4" style={{ color: textMuted }}>
+          Aucun module pour l&apos;instant.
+        </p>
         <Link
           href="/admin/dashboard/modules/new"
-          className="mt-4 inline-block text-sm text-white underline underline-offset-4"
+          className="text-sm text-white underline underline-offset-4"
         >
           Créer le premier module
         </Link>
@@ -43,10 +52,10 @@ export default function ModuleList({ modules }: ModuleListProps) {
   }
 
   return (
-    <div className="border border-zinc-800 rounded-lg overflow-hidden">
+    <div className="rounded-xl overflow-hidden" style={{ border }}>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-zinc-800 text-zinc-500 text-xs uppercase tracking-wider">
+          <tr style={{ borderBottom: border, color: textMuted, fontSize: '11px' }} className="uppercase tracking-wider">
             <th className="text-left px-4 py-3 font-medium w-12">#</th>
             <th className="text-left px-4 py-3 font-medium">Nom</th>
             <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Description</th>
@@ -54,21 +63,32 @@ export default function ModuleList({ modules }: ModuleListProps) {
             <th className="text-right px-4 py-3 font-medium">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-900">
-          {modules.map((module) => (
-            <tr key={module.id} className="hover:bg-zinc-950 transition-colors">
-              <td className="px-4 py-3 text-zinc-400 font-mono">{module.number}</td>
+        <tbody>
+          {modules.map((module, i) => (
+            <tr
+              key={module.id}
+              className="transition-colors"
+              style={{
+                borderTop: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.05)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              <td className="px-4 py-3 font-mono text-xs" style={{ color: textMuted }}>
+                {module.number}
+              </td>
               <td className="px-4 py-3 font-medium text-white">{module.name}</td>
-              <td className="px-4 py-3 text-zinc-400 hidden md:table-cell max-w-xs truncate">
-                {module.description ?? <span className="text-zinc-600 italic">—</span>}
+              <td className="px-4 py-3 hidden md:table-cell max-w-xs truncate" style={{ color: textSub }}>
+                {module.description ?? <span style={{ color: textMuted, fontStyle: 'italic' }}>—</span>}
               </td>
               <td className="px-4 py-3 hidden sm:table-cell">
                 <span
-                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium ${
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium"
+                  style={
                     module.media_type === 'audio'
-                      ? 'bg-violet-950 text-violet-300'
-                      : 'bg-blue-950 text-blue-300'
-                  }`}
+                      ? { background: 'rgba(139,92,246,0.15)', color: '#a78bfa' }
+                      : { background: 'rgba(0,146,247,0.15)', color: '#60b8ff' }
+                  }
                 >
                   {module.media_type === 'audio' ? '🎵' : '🎬'} {module.media_type}
                 </span>
@@ -76,7 +96,7 @@ export default function ModuleList({ modules }: ModuleListProps) {
               <td className="px-4 py-3 text-right">
                 {confirmId === module.id ? (
                   <span className="inline-flex items-center gap-2">
-                    <span className="text-zinc-400 text-xs">Supprimer ?</span>
+                    <span className="text-xs" style={{ color: textMuted }}>Supprimer ?</span>
                     <button
                       onClick={() => handleDelete(module.id)}
                       disabled={deletingId === module.id}
@@ -86,7 +106,8 @@ export default function ModuleList({ modules }: ModuleListProps) {
                     </button>
                     <button
                       onClick={() => setConfirmId(null)}
-                      className="text-xs text-zinc-500 hover:text-zinc-300"
+                      className="text-xs hover:text-white"
+                      style={{ color: textMuted }}
                     >
                       Non
                     </button>
@@ -95,13 +116,15 @@ export default function ModuleList({ modules }: ModuleListProps) {
                   <span className="inline-flex items-center gap-3">
                     <Link
                       href={`/admin/dashboard/modules/${module.id}/edit`}
-                      className="text-zinc-400 hover:text-white transition-colors text-xs"
+                      className="text-xs hover:text-white transition-colors"
+                      style={{ color: textSub }}
                     >
                       Modifier
                     </Link>
                     <button
                       onClick={() => setConfirmId(module.id)}
-                      className="text-zinc-600 hover:text-red-400 transition-colors text-xs"
+                      className="text-xs hover:text-red-400 transition-colors"
+                      style={{ color: textMuted }}
                     >
                       Supprimer
                     </button>

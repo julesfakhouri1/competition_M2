@@ -16,7 +16,10 @@ export default function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="text-zinc-500 text-xs hover:text-white transition-colors"
+      className="text-xs transition-colors"
+      style={{ color: 'rgba(188,205,232,0.5)' }}
+      onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
+      onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(188,205,232,0.5)'}
     >
       Déconnexion
     </button>
