@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Outfit, Rajdhani } from 'next/font/google'
 import { type Locale, getLocaleFromCookie, translations } from '@/lib/i18n'
 import { createClient } from '@/lib/supabase'
@@ -44,6 +44,7 @@ export default function ModulesPage() {
   const [selected, setSelected] = useState<number[]>([])
   const [items,    setItems]    = useState<Item[]>([])
   const [popup,    setPopup]    = useState<number | null>(null)
+  const nodeRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   useEffect(() => { setLocale(getLocaleFromCookie()) }, [])
 
@@ -73,6 +74,12 @@ export default function ModulesPage() {
   function selectAndClose(i: number) {
     setSelected(prev => prev.includes(i) ? prev : [...prev, i])
     setPopup(null)
+    const nextIndex = i + 1
+    if (nextIndex < items.length) {
+      setTimeout(() => {
+        nodeRefs.current[nextIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 320)
+    }
   }
 
   const guideTitle    = locale === 'en' ? 'Visit Guide'      : 'Guide de visite'
@@ -208,6 +215,7 @@ export default function ModulesPage() {
               return (
                 <button
                   key={i}
+                  ref={el => { nodeRefs.current[i] = el }}
                   type="button"
                   onClick={() => setPopup(i)}
                   aria-label={item.name}

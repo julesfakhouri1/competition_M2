@@ -207,7 +207,7 @@ export default function LandingPage() {
               type="button"
               className="et-btn-primary w-full"
               aria-label={t.cta}
-              onClick={() => router.push('/experience')}
+              onClick={() => router.push('/parcours')}
               style={{
                 minHeight: '52px',
                 padding: '14px 32px', borderRadius: '999px',

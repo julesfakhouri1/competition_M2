@@ -62,7 +62,7 @@ export default function ExperiencePage() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('et_visitor', JSON.stringify({ firstName, email, age }))
     }
-    router.push('/modules')
+    router.push('/parcours')
   }
 
   function inputStyle(field: string): React.CSSProperties {
