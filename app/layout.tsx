@@ -6,6 +6,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Enchanted Tools",
   description: "Explorez l'espace Enchanted Tools",
+  icons: {
+    icon: "/enchanted_tools.svg",
+    shortcut: "/enchanted_tools.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
