@@ -27,3 +27,145 @@ body {
 h1, h2 {
   font-family: "AcuminVariable", sans-serif !important;
 }
+
+/* ── Keyframes ──────────────────────────────────────────────── */
+
+@keyframes floatGlow {
+  0%, 100% { opacity: 0.22; transform: translate(-50%,-50%) scale(1);   }
+  50%       { opacity: 0.38; transform: translate(-50%,-50%) scale(1.1); }
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes logoAppear {
+  from { opacity: 0; transform: scale(0.84); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+@keyframes nodePulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,200,255,0.35), 0 0 18px rgba(0,200,255,0.22); }
+  50%      { box-shadow: 0 0 0 9px rgba(0,200,255,0),  0 0 28px rgba(0,200,255,0.44); }
+}
+@keyframes starPop {
+  from { transform: rotate(-22deg) scale(0.55); opacity: 0; }
+  to   { transform: rotate(0deg)  scale(1);    opacity: 1; }
+}
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateY(-3px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+@keyframes headerIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes popupIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+@keyframes completionIn {
+  from { opacity: 0; transform: translateY(32px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* ── Landing page ───────────────────────────────────────────── */
+
+.et-logo { animation: logoAppear  0.65s cubic-bezier(0.16,1,0.3,1)        both; }
+.et-f1   { animation: fadeSlideUp 0.65s cubic-bezier(0.16,1,0.3,1) 0.10s both; }
+.et-f2   { animation: fadeSlideUp 0.65s cubic-bezier(0.16,1,0.3,1) 0.20s both; }
+.et-f3   { animation: fadeSlideUp 0.65s cubic-bezier(0.16,1,0.3,1) 0.32s both; }
+.et-f4   { animation: fadeSlideUp 0.65s cubic-bezier(0.16,1,0.3,1) 0.44s both; }
+.et-f5   { animation: fadeSlideUp 0.65s cubic-bezier(0.16,1,0.3,1) 0.56s both; }
+
+.et-float {
+  position: absolute; top: 50%; left: 50%;
+  animation: floatGlow 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.et-skip {
+  position: absolute; top: -100px; left: 1rem;
+  padding: 0.5rem 1rem; background: #fff; color: #000;
+  border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem;
+  z-index: 100; transition: top 0.2s;
+}
+.et-skip:focus { top: 1rem; }
+
+.et-btn-primary { transition: box-shadow 0.22s ease, transform 0.16s ease; }
+.et-btn-primary:hover {
+  box-shadow: 0 0 52px rgba(0,200,255,0.65), 0 6px 28px rgba(0,146,247,0.4) !important;
+  transform: translateY(-2px);
+}
+.et-btn-primary:active {
+  transform: scale(0.97) !important;
+  box-shadow: 0 0 18px rgba(0,200,255,0.3) !important;
+}
+
+.et-btn-sec { transition: background 0.18s ease; }
+.et-btn-sec:hover  { background: rgba(255,255,255,0.12) !important; }
+.et-btn-sec:active { background: rgba(255,255,255,0.18) !important; transform: scale(0.97); }
+
+.et-btn-primary:focus-visible,
+.et-btn-sec:focus-visible,
+.et-skip:focus-visible { outline: 3px solid #00C8FF; outline-offset: 3px; }
+
+/* ── Experience form ────────────────────────────────────────── */
+
+.et-form-card { animation: fadeUp 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+@media (prefers-reduced-motion: reduce) { .et-form-card { animation: none; } }
+
+.et-field::placeholder { color: rgba(188,205,232,0.45); }
+.et-field:focus { outline: none; }
+
+.et-age-opt { transition: background 0.15s ease; }
+.et-age-opt:hover { background: rgba(255,255,255,0.06) !important; }
+
+.et-newsletter-card { transition: background 0.2s ease, border-color 0.2s ease; cursor: pointer; }
+
+/* ── Page parcours ──────────────────────────────────────────── */
+
+.et-parc-hdr  { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
+.et-card1     { animation: cardIn 0.5s  cubic-bezier(0.16,1,0.3,1) 0.12s both; }
+.et-card2     { animation: cardIn 0.5s  cubic-bezier(0.16,1,0.3,1) 0.22s both; }
+.et-note      { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 0.30s both; }
+
+.et-parc-card { transition: transform 0.18s ease, box-shadow 0.25s ease; cursor: pointer; }
+.et-parc-card:active { transform: scale(0.96); }
+
+/* ── Choix-parcours (path map) ──────────────────────────────── */
+
+.et-hdr        { animation: headerIn  0.5s  cubic-bezier(0.16,1,0.3,1) 0.06s both; }
+.et-completion { animation: completionIn 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+.et-popup-card { animation: popupIn 0.28s cubic-bezier(0.16,1,0.3,1) both; }
+.et-star       { animation: starPop   0.28s cubic-bezier(0.34,1.56,0.64,1) both; }
+.et-tip        { animation: tooltipIn 0.22s cubic-bezier(0.16,1,0.3,1) both; }
+
+.et-node { transition: transform 0.12s ease, background 0.25s ease, border-color 0.25s ease; }
+.et-node:active { transform: scale(0.87) !important; }
+.et-node-glow { animation: nodePulse 2.2s ease-in-out infinite; }
+
+.et-cta { transition: box-shadow 0.22s ease, transform 0.15s ease, background 0.25s ease; }
+.et-cta:not(:disabled):hover  { box-shadow: 0 0 40px rgba(0,200,255,0.5), 0 4px 16px rgba(0,146,247,0.35) !important; }
+.et-cta:not(:disabled):active { transform: scale(0.97); }
+
+.et-read-btn { transition: opacity 0.15s ease, transform 0.12s ease; }
+.et-read-btn:active { transform: scale(0.97); opacity: 0.85; }
+
+/* ── Reduced motion ─────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .et-logo, .et-f1, .et-f2, .et-f3, .et-f4, .et-f5 {
+    animation: none !important; opacity: 1 !important; transform: none !important;
+  }
+  .et-float      { animation: none !important; transform: translate(-50%,-50%) !important; }
+  .et-btn-primary { transition: none !important; }
+  .et-parc-hdr, .et-card1, .et-card2, .et-note { animation: none !important; opacity: 1 !important; }
+  .et-node-glow, .et-star, .et-tip, .et-hdr, .et-popup-card { animation: none !important; opacity: 1 !important; }
+}

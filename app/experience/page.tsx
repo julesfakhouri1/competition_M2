@@ -13,7 +13,6 @@ const AGE_RANGES = {
   en: ['Under 10', '10 – 14', '15 – 17', '18 – 25', '26 – 40', 'Over 40'],
 }
 
-// Icône SVG inline
 function IconUser()  { return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> }
 function IconMail()  { return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg> }
 function IconChevron({ open }: { open: boolean }) {
@@ -34,6 +33,7 @@ export default function ExperiencePage() {
   const [age,       setAge]       = useState('')
   const [error,      setError]      = useState('')
   const [emailError, setEmailError] = useState('')
+  const [newsletter, setNewsletter] = useState(false)
   const [loading,    setLoading]    = useState(false)
   const [ageOpen,    setAgeOpen]    = useState(false)
   const [focused,    setFocused]    = useState<string | null>(null)
@@ -42,7 +42,6 @@ export default function ExperiencePage() {
 
   useEffect(() => { setLocale(getLocaleFromCookie()) }, [])
 
-  // Fermer le dropdown au clic extérieur
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (dropRef.current && !dropRef.current.contains(e.target as Node)) setAgeOpen(false)
@@ -60,7 +59,7 @@ export default function ExperiencePage() {
     if (!isValidEmail(email)) { setEmailError(t.formErrorEmail); return }
     setLoading(true)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('et_visitor', JSON.stringify({ firstName, email, age }))
+      localStorage.setItem('et_visitor', JSON.stringify({ firstName, email, age, newsletter }))
     }
     router.push('/parcours')
   }
@@ -78,229 +77,216 @@ export default function ExperiencePage() {
   }
 
   return (
-    <>
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(24px); }
-          to   { opacity: 1; transform: translateY(0);    }
-        }
-        .et-form-card { animation: fadeUp 0.55s cubic-bezier(0.16,1,0.3,1) both; }
-        @media (prefers-reduced-motion: reduce) { .et-form-card { animation: none; } }
+    <main
+      className={`${outfit.className} relative flex flex-col items-center justify-center overflow-hidden`}
+      style={{
+        height: '100dvh',
+        background: 'linear-gradient(180deg, #0D1B35 0%, #1B1042 52%, #0E0820 100%)',
+        paddingTop:    'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingLeft:   'max(1.25rem, env(safe-area-inset-left, 0px))',
+        paddingRight:  'max(1.25rem, env(safe-area-inset-right, 0px))',
+      }}
+    >
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div style={{ position:'absolute', top:'-80px', left:'-60px', width:'340px', height:'340px', borderRadius:'50%', background:'radial-gradient(circle, rgba(0,146,247,0.32) 0%, transparent 62%)' }} />
+        <div style={{ position:'absolute', bottom:'-60px', right:'-60px', width:'300px', height:'300px', borderRadius:'50%', background:'radial-gradient(circle, rgba(195,66,150,0.22) 0%, transparent 62%)' }} />
+      </div>
 
-        .et-field::placeholder { color: rgba(188,205,232,0.45); }
-        .et-field:focus { outline: none; }
-
-        .et-cta {
-          -webkit-tap-highlight-color: transparent;
-          transition: box-shadow 0.22s ease, transform 0.16s ease;
-        }
-        .et-cta:hover  { box-shadow: 0 0 40px rgba(0,200,255,0.5), 0 4px 16px rgba(0,146,247,0.35) !important; }
-        .et-cta:active { transform: scale(0.97); }
-
-        .et-age-opt { -webkit-tap-highlight-color: transparent; transition: background 0.15s ease; }
-        .et-age-opt:hover { background: rgba(255,255,255,0.06) !important; }
-      `}</style>
-
-      <main
-        className={`${outfit.className} relative flex flex-col items-center justify-center overflow-hidden`}
+      <div
+        className="et-form-card relative z-10 w-full max-w-sm"
         style={{
-          height: '100dvh',
-          background: 'linear-gradient(180deg, #0D1B35 0%, #1B1042 52%, #0E0820 100%)',
-          paddingTop:    'env(safe-area-inset-top, 0px)',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          paddingLeft:   'max(1.25rem, env(safe-area-inset-left, 0px))',
-          paddingRight:  'max(1.25rem, env(safe-area-inset-right, 0px))',
+          background: 'rgba(255,255,255,0.04)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '28px',
+          padding: '32px 24px 28px',
         }}
       >
-        {/* Halos décoratifs */}
-        <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div style={{ position:'absolute', top:'-80px', left:'-60px', width:'340px', height:'340px', borderRadius:'50%', background:'radial-gradient(circle, rgba(0,146,247,0.32) 0%, transparent 62%)' }} />
-          <div style={{ position:'absolute', bottom:'-60px', right:'-60px', width:'300px', height:'300px', borderRadius:'50%', background:'radial-gradient(circle, rgba(195,66,150,0.22) 0%, transparent 62%)' }} />
+        <div className="text-center mb-8">
+          <p style={{ fontFamily: rajdhani.style.fontFamily, fontSize: '13px', fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(0,200,255,0.8)', textTransform: 'uppercase', marginBottom: '8px' }}>
+            Enchanted Tools
+          </p>
+          <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#ffffff', lineHeight: 1.2 }}>
+            {locale === 'fr' ? 'Bienvenue' : 'Welcome'}
+          </h1>
+          <p style={{ fontSize: '13px', color: 'rgba(188,205,232,0.6)', marginTop: '6px' }}>
+            {locale === 'fr' ? 'Quelques infos avant de commencer' : 'A few details before you start'}
+          </p>
         </div>
 
-        {/* Carte */}
-        <div
-          className="et-form-card relative z-10 w-full max-w-sm"
-          style={{
-            background: 'rgba(255,255,255,0.04)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '28px',
-            padding: '32px 24px 28px',
-          }}
-        >
-          {/* En-tête carte */}
-          <div className="text-center mb-8">
-            <p style={{ fontFamily: rajdhani.style.fontFamily, fontSize: '13px', fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(0,200,255,0.8)', textTransform: 'uppercase', marginBottom: '8px' }}>
-              Enchanted Tools
-            </p>
-            <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#ffffff', lineHeight: 1.2 }}>
-              {locale === 'fr' ? 'Bienvenue' : 'Welcome'}
-            </h1>
-            <p style={{ fontSize: '13px', color: 'rgba(188,205,232,0.6)', marginTop: '6px' }}>
-              {locale === 'fr' ? 'Quelques infos avant de commencer' : 'A few details before you start'}
-            </p>
-          </div>
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
 
-          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
-
-            {/* Prénom */}
-            <label className="flex flex-col gap-1.5">
-              <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: 'rgba(188,205,232,0.55)', textTransform: 'uppercase' }}>
-                {t.formFirstName}
+          <label className="flex flex-col gap-1.5">
+            <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: 'rgba(188,205,232,0.55)', textTransform: 'uppercase' }}>
+              {t.formFirstName}
+            </span>
+            <div className="relative flex items-center">
+              <span className="absolute left-4 pointer-events-none" style={{ color: focused === 'firstName' ? 'rgba(0,200,255,0.7)' : 'rgba(188,205,232,0.35)', transition: 'color 0.2s' }}>
+                <IconUser />
               </span>
-              <div className="relative flex items-center">
-                <span className="absolute left-4 pointer-events-none" style={{ color: focused === 'firstName' ? 'rgba(0,200,255,0.7)' : 'rgba(188,205,232,0.35)', transition: 'color 0.2s' }}>
-                  <IconUser />
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder={locale === 'fr' ? 'Votre prénom' : 'Your first name'}
+                autoComplete="given-name"
+                className="et-field w-full text-white text-sm rounded-2xl"
+                style={{ ...inputStyle('firstName'), height: '52px', paddingLeft: '44px', paddingRight: '16px' }}
+                onFocus={() => setFocused('firstName')}
+                onBlur={() => setFocused(null)}
+              />
+            </div>
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: 'rgba(188,205,232,0.55)', textTransform: 'uppercase' }}>
+              {t.formEmail}
+            </span>
+            <div className="relative flex items-center">
+              <span className="absolute left-4 pointer-events-none" style={{ color: emailError ? 'rgba(252,165,165,0.8)' : focused === 'email' ? 'rgba(0,200,255,0.7)' : 'rgba(188,205,232,0.35)', transition: 'color 0.2s' }}>
+                <IconMail />
+              </span>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError('') }}
+                placeholder={locale === 'fr' ? 'votre@email.com' : 'your@email.com'}
+                autoComplete="email"
+                inputMode="email"
+                aria-invalid={!!emailError}
+                aria-describedby={emailError ? 'email-error' : undefined}
+                className="et-field w-full text-white text-sm rounded-2xl"
+                style={{
+                  ...inputStyle('email'),
+                  height: '52px', paddingLeft: '44px', paddingRight: '16px',
+                  ...(emailError ? { borderColor: 'rgba(252,165,165,0.6)', boxShadow: '0 0 0 3px rgba(252,165,165,0.08)', background: 'rgba(252,165,165,0.04)' } : {}),
+                }}
+                onFocus={() => setFocused('email')}
+                onBlur={() => {
+                  setFocused(null)
+                  if (email && !isValidEmail(email)) setEmailError(t.formErrorEmail)
+                }}
+              />
+            </div>
+            {emailError && (
+              <p id="email-error" role="alert" style={{ fontSize: '12px', color: '#fca5a5', marginTop: '2px', paddingLeft: '4px' }}>
+                {emailError}
+              </p>
+            )}
+          </label>
+
+          <div className="flex flex-col gap-1.5" ref={dropRef}>
+            <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: 'rgba(188,205,232,0.55)', textTransform: 'uppercase' }}>
+              {t.formAge}
+            </span>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setAgeOpen((o) => !o)}
+                aria-haspopup="listbox"
+                aria-expanded={ageOpen}
+                className="w-full flex items-center justify-between rounded-2xl text-sm"
+                style={{
+                  ...inputStyle(ageOpen ? 'age' : ''),
+                  height: '52px', paddingLeft: '16px', paddingRight: '16px',
+                  color: age ? '#fff' : 'rgba(188,205,232,0.45)',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <span>{age || (locale === 'fr' ? 'Sélectionner votre âge' : 'Select your age')}</span>
+                <span style={{ color: 'rgba(188,205,232,0.5)' }}>
+                  <IconChevron open={ageOpen} />
                 </span>
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder={locale === 'fr' ? 'Votre prénom' : 'Your first name'}
-                  autoComplete="given-name"
-                  className="et-field w-full text-white text-sm rounded-2xl"
-                  style={{ ...inputStyle('firstName'), height: '52px', paddingLeft: '44px', paddingRight: '16px' }}
-                  onFocus={() => setFocused('firstName')}
-                  onBlur={() => setFocused(null)}
-                />
-              </div>
-            </label>
+              </button>
 
-            {/* Email */}
-            <label className="flex flex-col gap-1.5">
-              <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: 'rgba(188,205,232,0.55)', textTransform: 'uppercase' }}>
-                {t.formEmail}
-              </span>
-              <div className="relative flex items-center">
-                <span className="absolute left-4 pointer-events-none" style={{ color: emailError ? 'rgba(252,165,165,0.8)' : focused === 'email' ? 'rgba(0,200,255,0.7)' : 'rgba(188,205,232,0.35)', transition: 'color 0.2s' }}>
-                  <IconMail />
-                </span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError('') }}
-                  placeholder={locale === 'fr' ? 'votre@email.com' : 'your@email.com'}
-                  autoComplete="email"
-                  inputMode="email"
-                  aria-invalid={!!emailError}
-                  aria-describedby={emailError ? 'email-error' : undefined}
-                  className="et-field w-full text-white text-sm rounded-2xl"
+              {ageOpen && (
+                <div
+                  className="absolute left-0 right-0 mt-2 z-20 overflow-hidden"
+                  role="listbox"
                   style={{
-                    ...inputStyle('email'),
-                    height: '52px', paddingLeft: '44px', paddingRight: '16px',
-                    ...(emailError ? { borderColor: 'rgba(252,165,165,0.6)', boxShadow: '0 0 0 3px rgba(252,165,165,0.08)', background: 'rgba(252,165,165,0.04)' } : {}),
-                  }}
-                  onFocus={() => setFocused('email')}
-                  onBlur={() => {
-                    setFocused(null)
-                    if (email && !isValidEmail(email)) setEmailError(t.formErrorEmail)
-                  }}
-                />
-              </div>
-              {emailError && (
-                <p id="email-error" role="alert" style={{ fontSize: '12px', color: '#fca5a5', marginTop: '2px', paddingLeft: '4px' }}>
-                  {emailError}
-                </p>
-              )}
-            </label>
-
-            {/* Âge */}
-            <div className="flex flex-col gap-1.5" ref={dropRef}>
-              <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: 'rgba(188,205,232,0.55)', textTransform: 'uppercase' }}>
-                {t.formAge}
-              </span>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setAgeOpen((o) => !o)}
-                  aria-haspopup="listbox"
-                  aria-expanded={ageOpen}
-                  className="w-full flex items-center justify-between rounded-2xl text-sm"
-                  style={{
-                    ...inputStyle(ageOpen ? 'age' : ''),
-                    height: '52px', paddingLeft: '16px', paddingRight: '16px',
-                    color: age ? '#fff' : 'rgba(188,205,232,0.45)',
-                    WebkitTapHighlightColor: 'transparent',
+                    background: 'rgba(14,12,42,0.96)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '18px',
                   }}
                 >
-                  <span>{age || (locale === 'fr' ? 'Sélectionner votre âge' : 'Select your age')}</span>
-                  <span style={{ color: 'rgba(188,205,232,0.5)' }}>
-                    <IconChevron open={ageOpen} />
-                  </span>
-                </button>
-
-                {ageOpen && (
-                  <div
-                    className="absolute left-0 right-0 mt-2 z-20 overflow-hidden"
-                    role="listbox"
-                    style={{
-                      background: 'rgba(14,12,42,0.96)',
-                      backdropFilter: 'blur(20px)',
-                      WebkitBackdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '18px',
-                    }}
-                  >
-                    {AGE_RANGES[locale].map((range, i) => (
-                      <button
-                        key={range}
-                        type="button"
-                        role="option"
-                        aria-selected={age === range}
-                        onClick={() => { setAge(range); setAgeOpen(false) }}
-                        className="et-age-opt w-full text-left px-4 py-3 text-sm flex items-center justify-between"
-                        style={{
-                          color: age === range ? '#00C8FF' : 'rgba(188,205,232,0.8)',
-                          background: age === range ? 'rgba(0,200,255,0.08)' : 'transparent',
-                          borderTop: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.05)',
-                        }}
-                      >
-                        {range}
-                        {age === range && (
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path d="M2 7l3.5 3.5L12 3" stroke="#00C8FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+                  {AGE_RANGES[locale].map((range, i) => (
+                    <button
+                      key={range}
+                      type="button"
+                      role="option"
+                      aria-selected={age === range}
+                      onClick={() => { setAge(range); setAgeOpen(false) }}
+                      className="et-age-opt w-full text-left px-4 py-3 text-sm flex items-center justify-between"
+                      style={{
+                        color: age === range ? '#00C8FF' : 'rgba(188,205,232,0.8)',
+                        background: age === range ? 'rgba(0,200,255,0.08)' : 'transparent',
+                        borderTop: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      {range}
+                      {age === range && (
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <path d="M2 7l3.5 3.5L12 3" stroke="#00C8FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Erreur */}
-            {error && (
-              <p className="text-xs text-center" style={{ color: '#fca5a5', marginTop: '2px' }}>{error}</p>
-            )}
+          {error && (
+            <p className="text-xs text-center" style={{ color: '#fca5a5', marginTop: '2px' }}>{error}</p>
+          )}
 
-            {/* CTA */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="et-cta w-full text-white font-semibold text-sm rounded-2xl disabled:opacity-50"
-              style={{
-                height: '54px',
-                marginTop: '6px',
-                background: '#8B3677',
-                boxShadow: '0 0 28px rgba(139,54,119,0.4), 0 4px 16px rgba(139,54,119,0.28)',
-                border: 'none',
-              }}
-            >
-              {loading ? '…' : t.formSubmit}
-            </button>
-          </form>
-        </div>
+          <div
+            role="radio"
+            aria-checked={newsletter}
+            tabIndex={0}
+            onClick={() => setNewsletter(n => !n)}
+            onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && setNewsletter(n => !n)}
+            className={`et-newsletter-card flex items-center gap-3 px-4 py-3.5 rounded-2xl mt-0.5 border-[1.5px] ${
+              newsletter
+                ? 'bg-[rgba(139,54,119,0.1)] border-[rgba(139,54,119,0.4)]'
+                : 'bg-white/[0.04] border-white/10'
+            }`}
+          >
+            <div className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors duration-200 ${
+              newsletter ? 'border-[#8B3677]' : 'border-white/30'
+            }`}>
+              {newsletter && <div className="w-2.5 h-2.5 rounded-full bg-[#8B3677]" />}
+            </div>
+            <div>
+              <p className="text-[13px] font-semibold text-white m-0 mb-0.5 leading-[1.3]">
+                {locale === 'fr' ? "S'inscrire à la newsletter" : 'Subscribe to newsletter'}
+              </p>
+              <p className="text-[11px] text-white/50 m-0 leading-[1.4]">
+                {locale === 'fr' ? "Restez informé des actualités d'Enchanted Tools" : 'Stay informed about Enchanted Tools news'}
+              </p>
+            </div>
+          </div>
 
-        {/* Mention confidentialité */}
-        <p
-          className="relative z-10 text-xs text-center mt-5"
-          style={{ color: 'rgba(188,205,232,0.38)' }}
-        >
-          {t.formPrivacy}
-        </p>
-      </main>
-    </>
+          <button
+            type="submit"
+            disabled={loading}
+            className="et-cta w-full h-[54px] mt-1.5 text-white font-semibold text-sm rounded-2xl bg-[#8B3677] border-0 shadow-[0_0_28px_rgba(139,54,119,0.4),0_4px_16px_rgba(139,54,119,0.28)] disabled:opacity-50"
+          >
+            {loading ? '…' : t.formSubmit}
+          </button>
+        </form>
+      </div>
+
+      <p
+        className="relative z-10 text-xs text-center mt-5"
+        style={{ color: 'rgba(188,205,232,0.38)' }}
+      >
+        {t.formPrivacy}
+      </p>
+    </main>
   )
 }

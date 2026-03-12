@@ -39,32 +39,6 @@ export default function ParcoursPage() {
 
   return (
     <>
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(22px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes cardIn {
-          from { opacity: 0; transform: translateY(30px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0)    scale(1); }
-        }
-        .et-hdr   { animation: fadeUp  0.45s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
-        .et-card1 { animation: cardIn  0.5s  cubic-bezier(0.16,1,0.3,1) 0.12s both; }
-        .et-card2 { animation: cardIn  0.5s  cubic-bezier(0.16,1,0.3,1) 0.22s both; }
-        .et-note  { animation: fadeUp  0.45s cubic-bezier(0.16,1,0.3,1) 0.30s both; }
-
-        .et-parc-card {
-          -webkit-tap-highlight-color: transparent;
-          transition: transform 0.18s ease, box-shadow 0.25s ease;
-          cursor: pointer;
-        }
-        .et-parc-card:active { transform: scale(0.96); }
-
-        @media (prefers-reduced-motion: reduce) {
-          .et-hdr, .et-card1, .et-card2, .et-note { animation: none !important; opacity: 1 !important; }
-        }
-      `}</style>
-
       <main
         className={outfit.className}
         style={{
@@ -86,7 +60,7 @@ export default function ParcoursPage() {
         </div>
 
         {/* ── Header ── */}
-        <div className="et-hdr" style={{ textAlign: 'center', marginBottom: '28px', position: 'relative', zIndex: 1 }}>
+        <div className="et-parc-hdr" style={{ textAlign: 'center', marginBottom: '28px', position: 'relative', zIndex: 1 }}>
           <p style={{
             fontFamily: rajdhani.style.fontFamily,
             fontSize: '13px', fontWeight: 700,
