@@ -80,6 +80,22 @@ export default function ParcoursPage() {
           </h1>
         </div>
 
+        {/* ── Note ── */}
+        <p className="et-note" style={{
+          position: 'relative', zIndex: 1,
+          textAlign: 'center',
+          fontSize: '13px',
+          color: 'rgba(188,205,232,0.6)',
+          marginBottom: '20px',
+          lineHeight: 1.5,
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '16px',
+          padding: '12px 16px',
+        }}>
+          {c('parcours_note', "Tu peux revenir sur l'autre parcours à tout moment.")}
+        </p>
+
         {/* ── Cards ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative', zIndex: 1 }}>
 
@@ -207,17 +223,6 @@ export default function ParcoursPage() {
           </div>
         </div>
 
-        {/* ── Note ── */}
-        <p className="et-note" style={{
-          position: 'relative', zIndex: 1,
-          textAlign: 'center',
-          fontSize: '12px',
-          color: 'rgba(188,205,232,0.45)',
-          marginTop: '20px',
-          lineHeight: 1.5,
-        }}>
-          {c('parcours_note', "Tu peux revenir sur l'autre parcours à tout moment.")}
-        </p>
       </main>
     </>
   )
