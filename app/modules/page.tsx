@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Outfit, Rajdhani } from 'next/font/google'
 import { type Locale, getLocaleFromCookie, translations } from '@/lib/i18n'
 import { createClient } from '@/lib/supabase'
@@ -12,8 +11,10 @@ const rajdhani = Rajdhani({ subsets: ['latin'], weight: ['600', '700'] })
 const NODE_SIZE  = 68
 const SPACING_Y  = 118
 const TOP_OFFSET = 24
-const LEFT_PCT   = 20   // % from left — left-side nodes center
-const RIGHT_PCT  = 75   // % from left — right-side nodes center
+const LEFT_PCT   = 20
+const RIGHT_PCT  = 75
+
+type Item = { name: string; description: string }
 
 function StarIcon({ size = 26 }: { size?: number }) {
   return (
@@ -39,11 +40,10 @@ function LockIcon() {
 }
 
 export default function ModulesPage() {
-  const router = useRouter()
   const [locale,   setLocale]   = useState<Locale>('fr')
-  const [selected, setSelected] = useState<Set<number>>(new Set())
-  const [loading,  setLoading]  = useState(false)
-  const [items,    setItems]    = useState<string[]>([])
+  const [selected, setSelected] = useState<number[]>([])
+  const [items,    setItems]    = useState<Item[]>([])
+  const [popup,    setPopup]    = useState<number | null>(null)
 
   useEffect(() => { setLocale(getLocaleFromCookie()) }, [])
 
@@ -53,50 +53,26 @@ export default function ModulesPage() {
         const supabase = createClient()
         const { data } = await supabase
           .from('modules')
-          .select('name')
+          .select('name, description')
           .order('order_index', { ascending: true })
         if (data && data.length > 0) {
-          setItems(data.map((m: { name: string }) => m.name))
+          setItems(data.map((m: { name: string; description: string }) => ({
+            name:        m.name,
+            description: m.description ?? '',
+          })))
         } else {
-          setItems(translations['fr'].checklistItems.split('|'))
+          setItems(translations['fr'].checklistItems.split('|').map(name => ({ name, description: '' })))
         }
       } catch {
-        setItems(translations['fr'].checklistItems.split('|'))
+        setItems(translations['fr'].checklistItems.split('|').map(name => ({ name, description: '' })))
       }
     }
     load()
   }, [])
 
-  const t = translations[locale]
-
-  function toggle(i: number) {
-    setSelected(prev => {
-      const next = new Set(prev)
-      next.has(i) ? next.delete(i) : next.add(i)
-      return next
-    })
-  }
-
-  async function handleValidate() {
-    if (selected.size === 0) return
-    setLoading(true)
-    try {
-      const choices = [...selected].map(i => items[i])
-      const current = typeof window !== 'undefined'
-        ? JSON.parse(localStorage.getItem('et_visitor') ?? '{}')
-        : {}
-      const { saveVisitor } = await import('@/lib/actions')
-      await saveVisitor({
-        first_name: current.firstName ?? '',
-        email:      current.email     ?? '',
-        age:        current.age       ?? '',
-        activities: choices,
-      })
-      localStorage.setItem('et_visitor', JSON.stringify({ ...current, activities: choices }))
-    } catch {
-      // Silencieux
-    }
-    router.push('/')
+  function selectAndClose(i: number) {
+    setSelected(prev => prev.includes(i) ? prev : [...prev, i])
+    setPopup(null)
   }
 
   const guideTitle    = locale === 'en' ? 'Visit Guide'      : 'Guide de visite'
@@ -104,8 +80,11 @@ export default function ModulesPage() {
     ? "Explore the stages to discover the Mirokaï universe"
     : "Explorez les étapes pour découvrir l'univers des Mirokaï"
 
-  const totalHeight  = TOP_OFFSET + items.length * SPACING_Y + 64
-  const nodeCenterY  = (i: number) => TOP_OFFSET + i * SPACING_Y + NODE_SIZE / 2
+  const totalHeight = TOP_OFFSET + items.length * SPACING_Y + 64
+  const nodeCenterY = (i: number) => TOP_OFFSET + i * SPACING_Y + NODE_SIZE / 2
+
+  const popupIndex = popup ?? -1
+  const popupItem  = popupIndex >= 0 ? items[popupIndex] : null
 
   return (
     <>
@@ -126,20 +105,27 @@ export default function ModulesPage() {
           from { opacity: 0; transform: translateY(14px); }
           to   { opacity: 1; transform: translateY(0);    }
         }
+        @keyframes popupIn {
+          from { opacity: 0; transform: translateY(24px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0)    scale(1);    }
+        }
         .et-node { -webkit-tap-highlight-color: transparent; transition: transform 0.12s ease, background 0.25s ease, border-color 0.25s ease; }
         .et-node:active { transform: scale(0.87) !important; }
         .et-node-glow { animation: nodePulse 2.2s ease-in-out infinite; }
         .et-star  { animation: starPop   0.28s cubic-bezier(0.34,1.56,0.64,1) both; }
         .et-tip   { animation: tooltipIn 0.22s cubic-bezier(0.16,1,0.3,1) both; }
         .et-hdr   { animation: headerIn  0.5s  cubic-bezier(0.16,1,0.3,1) 0.06s both; }
+        .et-popup-card { animation: popupIn 0.28s cubic-bezier(0.16,1,0.3,1) both; }
         .et-cta {
           -webkit-tap-highlight-color: transparent;
           transition: box-shadow 0.22s ease, transform 0.15s ease, background 0.25s ease;
         }
         .et-cta:not(:disabled):hover  { box-shadow: 0 0 40px rgba(0,200,255,0.5), 0 4px 16px rgba(0,146,247,0.35) !important; }
         .et-cta:not(:disabled):active { transform: scale(0.97); }
+        .et-read-btn { -webkit-tap-highlight-color: transparent; transition: opacity 0.15s ease, transform 0.12s ease; }
+        .et-read-btn:active { transform: scale(0.97); opacity: 0.85; }
         @media (prefers-reduced-motion: reduce) {
-          .et-node-glow, .et-star, .et-tip, .et-hdr { animation: none !important; opacity: 1 !important; }
+          .et-node-glow, .et-star, .et-tip, .et-hdr, .et-popup-card { animation: none !important; opacity: 1 !important; }
         }
       `}</style>
 
@@ -164,32 +150,18 @@ export default function ModulesPage() {
         <div
           className="et-hdr mx-5 mb-7"
           style={{
-            background:       'rgba(255,255,255,0.045)',
-            backdropFilter:   'blur(22px)',
+            background:           'rgba(255,255,255,0.045)',
+            backdropFilter:       'blur(22px)',
             WebkitBackdropFilter: 'blur(22px)',
-            border:           '1px solid rgba(255,255,255,0.1)',
-            borderRadius:     '22px',
-            padding:          '18px 20px 16px',
+            border:               '1px solid rgba(255,255,255,0.1)',
+            borderRadius:         '22px',
+            padding:              '18px 20px 16px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
-            <div style={{
-              width: '3px', height: '18px', borderRadius: '2px', flexShrink: 0,
-              background: 'linear-gradient(180deg, #00C8FF, #0092F7)',
-            }} />
-            <h1 style={{
-              fontFamily: rajdhani.style.fontFamily,
-              fontSize: '17px', fontWeight: 700,
-              letterSpacing: '0.07em', color: '#ffffff',
-              textTransform: 'uppercase', margin: 0,
-            }}>
-              {guideTitle}
-            </h1>
-          </div>
-          <p style={{
-            fontSize: '12.5px', color: 'rgba(188,205,232,0.55)',
-            lineHeight: 1.5, margin: 0, paddingLeft: '13px', textAlign: 'center',
-          }}>
+          <h1 style={{ fontFamily: rajdhani.style.fontFamily, fontSize: '26px', fontWeight: 700, color: '#ffffff', textAlign: 'center', margin: '0 0 12px' }}>
+            {guideTitle}
+          </h1>
+          <p style={{ fontSize: '18px', fontWeight: 600, color: '#ffffff', lineHeight: 1.45, margin: 0, textAlign: 'center' }}>
             {guideSubtitle}
           </p>
         </div>
@@ -211,7 +183,7 @@ export default function ModulesPage() {
                 const x2 = i % 2 === 0 ? RIGHT_PCT : LEFT_PCT
                 const y1 = nodeCenterY(i)
                 const y2 = nodeCenterY(i + 1)
-                const lit = selected.has(i) && selected.has(i + 1)
+                const lit = selected.includes(i) && selected.includes(i + 1)
                 return (
                   <line key={i}
                     x1={x1} y1={y1} x2={x2} y2={y2}
@@ -229,7 +201,7 @@ export default function ModulesPage() {
             {/* Module nodes */}
             {items.map((item, i) => {
               const isLeft = i % 2 === 0
-              const isSel  = selected.has(i)
+              const isSel  = selected.includes(i)
               const topY   = TOP_OFFSET + i * SPACING_Y
               const xPct   = isLeft ? LEFT_PCT : RIGHT_PCT
 
@@ -237,14 +209,13 @@ export default function ModulesPage() {
                 <button
                   key={i}
                   type="button"
-                  onClick={() => toggle(i)}
-                  aria-pressed={isSel}
-                  aria-label={item}
+                  onClick={() => setPopup(i)}
+                  aria-label={item.name}
                   className={`et-node${isSel ? ' et-node-glow' : ''}`}
                   style={{
                     position: 'absolute',
-                    top:    `${topY}px`,
-                    left:   `calc(${xPct}% - ${NODE_SIZE / 2}px)`,
+                    top:  `${topY}px`,
+                    left: `calc(${xPct}% - ${NODE_SIZE / 2}px)`,
                     width:  `${NODE_SIZE}px`,
                     height: `${NODE_SIZE}px`,
                     borderRadius: '50%',
@@ -254,15 +225,10 @@ export default function ModulesPage() {
                     border: `2.5px solid ${isSel ? 'rgba(0,200,255,0.68)' : 'rgba(255,255,255,0.11)'}`,
                     backdropFilter: 'blur(14px)',
                     WebkitBackdropFilter: 'blur(14px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    overflow: 'visible',
-                    zIndex: 2,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', overflow: 'visible', zIndex: 2,
                   }}
                 >
-                  {/* Icon */}
                   {isSel
                     ? <span key="star" className="et-star"><StarIcon size={26} /></span>
                     : <span key="lock"><LockIcon /></span>
@@ -270,48 +236,35 @@ export default function ModulesPage() {
 
                   {/* Number badge */}
                   <span style={{
-                    position: 'absolute',
-                    bottom: '-3px', right: '-3px',
-                    width: '22px', height: '22px',
-                    borderRadius: '50%',
+                    position: 'absolute', bottom: '-3px', right: '-3px',
+                    width: '22px', height: '22px', borderRadius: '50%',
                     background: isSel ? 'linear-gradient(135deg, #00C8FF, #0092F7)' : 'rgba(22,40,80,0.95)',
                     border: `1.5px solid ${isSel ? 'rgba(0,210,255,0.7)' : 'rgba(255,255,255,0.14)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '10px', fontWeight: 700,
                     color: isSel ? '#fff' : 'rgba(188,205,232,0.6)',
-                    lineHeight: 1,
-                    zIndex: 1,
+                    lineHeight: 1, zIndex: 1,
                   }}>
                     {i + 1}
                   </span>
 
-                  {/* Name tooltip on selection */}
+                  {/* Tooltip */}
                   {isSel && (
                     <span
                       className="et-tip"
                       style={{
-                        position: 'absolute',
-                        top: '50%',
+                        position: 'absolute', top: '50%',
                         transform: 'translateY(-50%)',
                         [isLeft ? 'left' : 'right']: `${NODE_SIZE + 10}px`,
                         background: 'rgba(6,14,38,0.9)',
-                        backdropFilter: 'blur(16px)',
-                        WebkitBackdropFilter: 'blur(16px)',
-                        border: '1px solid rgba(0,200,255,0.28)',
-                        borderRadius: '14px',
-                        padding: '8px 13px',
-                        fontSize: '12px', fontWeight: 600,
-                        color: '#ffffff',
+                        backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+                        border: '1px solid rgba(0,200,255,0.28)', borderRadius: '14px',
+                        padding: '8px 13px', fontSize: '12px', fontWeight: 600, color: '#ffffff',
                         whiteSpace: 'nowrap',
-                        maxWidth: '155px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        boxShadow: '0 4px 18px rgba(0,0,0,0.45), 0 0 10px rgba(0,200,255,0.07)',
-                        pointerEvents: 'none',
-                        zIndex: 10,
+                        boxShadow: '0 4px 18px rgba(0,0,0,0.45)', pointerEvents: 'none', zIndex: 10,
                       }}
                     >
-                      {item}
+                      {item.name}
                     </span>
                   )}
                 </button>
@@ -321,34 +274,118 @@ export default function ModulesPage() {
         )}
       </div>
 
-      {/* ── Fixed validate button ── */}
-      <div
-        className="fixed left-0 right-0 z-50"
-        style={{
-          bottom: 0,
-          padding: `12px 20px max(1.5rem, env(safe-area-inset-bottom, 1.5rem))`,
-          background: 'linear-gradient(to top, rgba(14,8,32,0.96) 0%, rgba(14,8,32,0.85) 70%, transparent 100%)',
-        }}
-      >
-        <button
-          type="button"
-          onClick={handleValidate}
-          disabled={selected.size === 0 || loading}
-          className="et-cta w-full text-white font-semibold text-sm rounded-2xl"
+
+      {/* ── Module popup ── */}
+      {popupIndex >= 0 && popupItem && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mod-title"
+          onClick={() => setPopup(null)}
           style={{
-            height: '54px',
-            background: selected.size > 0
-              ? 'linear-gradient(90deg, #00C8FF 0%, #0092F7 100%)'
-              : 'rgba(255,255,255,0.07)',
-            boxShadow:   selected.size > 0 ? '0 0 28px rgba(0,200,255,0.3), 0 4px 16px rgba(0,146,247,0.22)' : 'none',
-            borderWidth: '1px', borderStyle: 'solid',
-            borderColor: selected.size > 0 ? 'transparent' : 'rgba(255,255,255,0.1)',
-            color:       selected.size > 0 ? '#ffffff' : 'rgba(188,205,232,0.38)',
+            position: 'fixed', inset: 0, zIndex: 100,
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+            paddingTop: 'max(3.5rem, env(safe-area-inset-top, 3.5rem))',
+            paddingLeft: '16px', paddingRight: '16px',
+            background: 'rgba(6,10,28,0.65)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
           }}
         >
-          {loading ? '…' : t.checklistValidate}
-        </button>
-      </div>
+          <div
+            className={`et-popup-card ${outfit.className}`}
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%',
+              background: 'linear-gradient(160deg, rgba(20,35,80,0.99) 0%, rgba(28,18,68,0.99) 100%)',
+              border: '1px solid rgba(0,200,255,0.2)',
+              borderRadius: '28px',
+              padding: '22px 20px 22px',
+              boxShadow: '0 24px 64px rgba(0,0,0,0.65), 0 0 0 0.5px rgba(0,200,255,0.08)',
+            }}
+          >
+            {/* Header: badge + titre + close */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '20px' }}>
+              {/* Badge numéro */}
+              <div style={{
+                flexShrink: 0,
+                width: '70px', height: '70px', borderRadius: '18px',
+                background: 'linear-gradient(135deg, #4DD9FF 0%, #00AAFF 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '28px', fontWeight: 800, color: '#ffffff',
+                boxShadow: '0 4px 20px rgba(0,200,255,0.4)',
+              }}>
+                {popupIndex + 1}
+              </div>
+
+              {/* Titre */}
+              <h2
+                id="mod-title"
+                style={{
+                  flex: 1,
+                  fontSize: '22px', fontWeight: 800,
+                  color: '#ffffff', lineHeight: 1.25,
+                  margin: 0, paddingTop: '4px',
+                }}
+              >
+                {popupItem.name}
+              </h2>
+
+              {/* Bouton fermer */}
+              <button
+                onClick={() => setPopup(null)}
+                aria-label="Fermer"
+                style={{
+                  flexShrink: 0,
+                  width: '42px', height: '42px', borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.12)',
+                  border: '1px solid rgba(255,255,255,0.16)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: 'rgba(255,255,255,0.8)',
+                  fontSize: '20px', lineHeight: 1,
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Description */}
+            <div style={{
+              background: 'rgba(255,255,255,0.055)',
+              border: '1px solid rgba(255,255,255,0.09)',
+              borderRadius: '18px',
+              padding: '18px',
+              marginBottom: '22px',
+              minHeight: '80px',
+            }}>
+              <p style={{
+                fontSize: '16px', color: 'rgba(210,225,250,0.88)',
+                lineHeight: 1.65, margin: 0,
+              }}>
+                {popupItem.description || 'Enchanted Tools allie imagination et technologie pour créer des personnages qui rapprochent l\'humain et la machine, ouvrant la voie à une robotique plus sensible et expressive.'}
+              </p>
+            </div>
+
+            {/* Bouton J'ai lu */}
+            <button
+              type="button"
+              onClick={() => selectAndClose(popupIndex)}
+              className="et-read-btn"
+              style={{
+                width: '100%', height: '58px', borderRadius: '999px',
+                background: 'linear-gradient(90deg, #4DD9FF 0%, #00AAFF 100%)',
+                border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                fontSize: '17px', fontWeight: 700, color: '#ffffff',
+                boxShadow: '0 0 28px rgba(0,200,255,0.4), 0 4px 16px rgba(0,170,255,0.3)',
+              }}
+            >
+              J&apos;ai lu ✓
+            </button>
+          </div>
+        </div>
+      )}
     </>
   )
 }
