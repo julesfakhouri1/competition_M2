@@ -67,8 +67,8 @@ export default function ModulesPage() {
     } catch { return [] }
   })
   const [items,    setItems]    = useState<Item[]>([])
-  const [popup,    setPopup]    = useState<number | null>(null)
-  const [completionDismissed, setCompletionDismissed] = useState(false)
+  const [popup,          setPopup]          = useState<number | null>(null)
+  const [showCompletion, setShowCompletion] = useState(false)
   const [cms,      setCms]      = useState<CmsMap>({})
   const [isPlaying,   setIsPlaying]   = useState(false)
   const [audioTime,   setAudioTime]   = useState(0)
@@ -103,6 +103,14 @@ export default function ModulesPage() {
     }
     load()
   }, [])
+
+  // Détection de fin de parcours
+  useEffect(() => {
+    if (items.length > 0 && selected.length >= items.length) {
+      const t = setTimeout(() => setShowCompletion(true), 250)
+      return () => clearTimeout(t)
+    }
+  }, [selected.length, items.length])
 
   useEffect(() => {
     const load = async () => {
@@ -174,9 +182,8 @@ export default function ModulesPage() {
   const totalHeight = TOP_OFFSET + items.length * SPACING_Y + 80
   const nodeCenterY = (i: number) => TOP_OFFSET + i * SPACING_Y + NODE_SIZE / 2
 
-  const popupIndex  = popup ?? -1
-  const popupItem   = popupIndex >= 0 ? items[popupIndex] : null
-  const isCompleted = items.length > 0 && selected.length >= items.length && !completionDismissed
+  const popupIndex = popup ?? -1
+  const popupItem  = popupIndex >= 0 ? items[popupIndex] : null
 
   return (
     <>
@@ -550,7 +557,7 @@ export default function ModulesPage() {
       )}
 
       {/* ── Page fin de parcours ── */}
-      {isCompleted && (
+      {showCompletion && (
         <div
           role="dialog"
           aria-modal="true"
@@ -568,7 +575,7 @@ export default function ModulesPage() {
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '40px' }}>
             <button
-              onClick={() => setCompletionDismissed(true)}
+              onClick={() => setShowCompletion(false)}
               aria-label="Retour"
               style={{
                 flexShrink: 0,
@@ -619,7 +626,17 @@ export default function ModulesPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <button
               type="button"
-              onClick={() => router.push('/parcours')}
+              onClick={() => {
+                const other = parcoursType === 'univers' ? 'techno' : 'univers'
+                try {
+                  localStorage.setItem('et_parcours', other)
+                  localStorage.removeItem('et_progress')
+                } catch {}
+                setSelected([])
+                setShowCompletion(false)
+                setParcoursType(other)
+                router.push('/choix-parcours')
+              }}
               style={{
                 width: '100%', height: '56px', borderRadius: '999px',
                 background: '#8B3677',
@@ -638,7 +655,7 @@ export default function ModulesPage() {
               onClick={() => {
                 setSelected([])
                 try { localStorage.removeItem('et_progress') } catch {}
-                setCompletionDismissed(true)
+                setShowCompletion(false)
                 setTimeout(() => topRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
               }}
               style={{
