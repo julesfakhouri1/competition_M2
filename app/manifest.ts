@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Enchanted Tools",
-    short_name: "Enchanted",
+    name: "Mirokaï Experience",
+    short_name: "Mirokaï",
     description: "Explorez l'espace Enchanted Tools — plan interactif et modules créatifs",
     start_url: "/",
     display: "standalone",

@@ -4,8 +4,8 @@ import PortraitGuard from "@/components/PortraitGuard";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Enchanted Tools",
-  description: "Explorez l'espace Enchanted Tools",
+  title: "Mirokaï Experience",
+  description: "Explorez l'espace Mirokaï Experience",
   icons: {
     icon: "/enchanted_tools.svg",
     shortcut: "/enchanted_tools.svg",
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Enchanted Tools",
+    title: "Mirokaï Experience",
   },
 };
 
