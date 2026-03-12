@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import PortraitGuard from "@/components/PortraitGuard";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -34,6 +35,7 @@ export default function RootLayout({
       </head>
       <body className="text-white" style={{ backgroundColor: '#0D1B35' }}>
         <ServiceWorkerRegistration />
+        <PortraitGuard />
         {children}
       </body>
     </html>
