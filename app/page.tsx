@@ -37,7 +37,13 @@ export default function LandingPage() {
     >
       <a href="#et-content" className="et-skip">{t.skipLink}</a>
 
-      <div className="fixed top-6 right-6 z-50">
+      <div
+        className="absolute z-50"
+        style={{
+          top:   'max(1.5rem, env(safe-area-inset-top,   0px))',
+          right: 'max(1.5rem, env(safe-area-inset-right, 0px))',
+        }}
+      >
         <LangSwitcher locale={locale} onLocaleChange={setLocale} />
       </div>
 
@@ -77,14 +83,15 @@ export default function LandingPage() {
 
       {/* Personnages — prend tout l'espace restant */}
       <div
-        className="relative z-10 flex-1 w-full flex items-end justify-center overflow-hidden"
+        className="relative z-10 flex-1 w-full"
         aria-hidden="true"
+        style={{ minHeight: 0 }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/characters_hero.svg"
           alt=""
-          style={{ width: '100%', height: 'auto', display: 'block' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'bottom center', display: 'block' }}
         />
       </div>
 
