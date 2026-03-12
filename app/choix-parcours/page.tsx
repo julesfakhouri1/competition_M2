@@ -1,9 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Outfit, Rajdhani } from 'next/font/google'
 import { type Locale, getLocaleFromCookie, translations } from '@/lib/i18n'
 import { createClient } from '@/lib/supabase'
+
+type CmsMap = Record<string, { fr: string; en: string }>
 
 const outfit   = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
 const rajdhani = Rajdhani({ subsets: ['latin'], weight: ['600', '700'] })
@@ -14,7 +17,7 @@ const TOP_OFFSET = 24
 const LEFT_PCT   = 20
 const RIGHT_PCT  = 75
 
-type Item = { name: string; description: string }
+type Item = { name: string; description: string; media_type?: string; media_url?: string }
 
 function StarIcon({ size = 26 }: { size?: number }) {
   return (
@@ -40,13 +43,47 @@ function LockIcon() {
 }
 
 export default function ModulesPage() {
+  const router = useRouter()
   const [locale,   setLocale]   = useState<Locale>('fr')
-  const [selected, setSelected] = useState<number[]>([])
+  const [selected, setSelected] = useState<number[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const saved = localStorage.getItem('et_progress')
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
   const [items,    setItems]    = useState<Item[]>([])
   const [popup,    setPopup]    = useState<number | null>(null)
+  const [completionDismissed, setCompletionDismissed] = useState(false)
+  const [cms,      setCms]      = useState<CmsMap>({})
+  const [isPlaying,   setIsPlaying]   = useState(false)
+  const [audioTime,   setAudioTime]   = useState(0)
+  const [audioDur,    setAudioDur]    = useState(0)
   const nodeRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const topRef   = useRef<HTMLDivElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => { setLocale(getLocaleFromCookie()) }, [])
+
+  // Reset audio when popup changes
+  useEffect(() => {
+    const audio = audioRef.current
+    if (audio) { audio.pause(); audio.currentTime = 0 }
+    setIsPlaying(false)
+    setAudioTime(0)
+    setAudioDur(0)
+  }, [popup])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const supabase = createClient()
+        const { data: cmsData } = await supabase.from('content').select('key,value_fr,value_en').in('section', ['guide', 'completion'])
+        if (cmsData) setCms(Object.fromEntries(cmsData.map((e: { key: string; value_fr: string; value_en: string }) => [e.key, { fr: e.value_fr, en: e.value_en }])))
+      } catch {}
+    }
+    load()
+  }, [])
 
   useEffect(() => {
     const load = async () => {
@@ -54,12 +91,14 @@ export default function ModulesPage() {
         const supabase = createClient()
         const { data } = await supabase
           .from('modules')
-          .select('name, description')
+          .select('name, description, media_type, media_url')
           .order('order_index', { ascending: true })
         if (data && data.length > 0) {
-          setItems(data.map((m: { name: string; description: string }) => ({
+          setItems(data.map((m: { name: string; description: string; media_type?: string; media_url?: string }) => ({
             name:        m.name,
             description: m.description ?? '',
+            media_type:  m.media_type,
+            media_url:   m.media_url,
           })))
         } else {
           setItems(translations['fr'].checklistItems.split('|').map(name => ({ name, description: '' })))
@@ -71,8 +110,29 @@ export default function ModulesPage() {
     load()
   }, [])
 
+  function togglePlay() {
+    const audio = audioRef.current
+    if (!audio) return
+    if (isPlaying) { audio.pause(); setIsPlaying(false) }
+    else { audio.play(); setIsPlaying(true) }
+  }
+
+  function seekAudio(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const pct  = (e.clientX - rect.left) / rect.width
+    if (audioRef.current && audioDur > 0) {
+      audioRef.current.currentTime = pct * audioDur
+      setAudioTime(pct * audioDur)
+    }
+  }
+
   function selectAndClose(i: number) {
-    setSelected(prev => prev.includes(i) ? prev : [...prev, i])
+    setSelected(prev => {
+      if (prev.includes(i)) return prev
+      const next = [...prev, i]
+      try { localStorage.setItem('et_progress', JSON.stringify(next)) } catch {}
+      return next
+    })
     setPopup(null)
     const nextIndex = i + 1
     if (nextIndex < items.length) {
@@ -82,60 +142,20 @@ export default function ModulesPage() {
     }
   }
 
-  const guideTitle    = locale === 'en' ? 'Visit Guide'      : 'Guide de visite'
-  const guideSubtitle = locale === 'en'
-    ? "Explore the stages to discover the Mirokaï universe"
-    : "Explorez les étapes pour découvrir l'univers des Mirokaï"
+  const c = (key: string, fallback: string) => (locale === 'fr' ? cms[key]?.fr : cms[key]?.en) || fallback
+
+  const guideTitle    = c('guide_title',    locale === 'en' ? 'Visit Guide' : 'Guide de visite')
+  const guideSubtitle = c('guide_subtitle', locale === 'en' ? "Explore the stages to discover the Mirokaï universe" : "Explorez les étapes pour découvrir l'univers des Mirokaï")
 
   const totalHeight = TOP_OFFSET + items.length * SPACING_Y + 64
   const nodeCenterY = (i: number) => TOP_OFFSET + i * SPACING_Y + NODE_SIZE / 2
 
-  const popupIndex = popup ?? -1
-  const popupItem  = popupIndex >= 0 ? items[popupIndex] : null
+  const popupIndex  = popup ?? -1
+  const popupItem   = popupIndex >= 0 ? items[popupIndex] : null
+  const isCompleted = items.length > 0 && selected.length >= items.length && !completionDismissed
 
   return (
     <>
-      <style>{`
-        @keyframes nodePulse {
-          0%,100% { box-shadow: 0 0 0 0 rgba(0,200,255,0.35), 0 0 18px rgba(0,200,255,0.22); }
-          50%      { box-shadow: 0 0 0 9px rgba(0,200,255,0),  0 0 28px rgba(0,200,255,0.44); }
-        }
-        @keyframes starPop {
-          from { transform: rotate(-22deg) scale(0.55); opacity: 0; }
-          to   { transform: rotate(0deg)  scale(1);    opacity: 1; }
-        }
-        @keyframes tooltipIn {
-          from { opacity: 0; transform: translateY(-3px) scale(0.94); }
-          to   { opacity: 1; transform: translateY(0)    scale(1);    }
-        }
-        @keyframes headerIn {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: translateY(0);    }
-        }
-        @keyframes popupIn {
-          from { opacity: 0; transform: translateY(24px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0)    scale(1);    }
-        }
-        .et-node { -webkit-tap-highlight-color: transparent; transition: transform 0.12s ease, background 0.25s ease, border-color 0.25s ease; }
-        .et-node:active { transform: scale(0.87) !important; }
-        .et-node-glow { animation: nodePulse 2.2s ease-in-out infinite; }
-        .et-star  { animation: starPop   0.28s cubic-bezier(0.34,1.56,0.64,1) both; }
-        .et-tip   { animation: tooltipIn 0.22s cubic-bezier(0.16,1,0.3,1) both; }
-        .et-hdr   { animation: headerIn  0.5s  cubic-bezier(0.16,1,0.3,1) 0.06s both; }
-        .et-popup-card { animation: popupIn 0.28s cubic-bezier(0.16,1,0.3,1) both; }
-        .et-cta {
-          -webkit-tap-highlight-color: transparent;
-          transition: box-shadow 0.22s ease, transform 0.15s ease, background 0.25s ease;
-        }
-        .et-cta:not(:disabled):hover  { box-shadow: 0 0 40px rgba(0,200,255,0.5), 0 4px 16px rgba(0,146,247,0.35) !important; }
-        .et-cta:not(:disabled):active { transform: scale(0.97); }
-        .et-read-btn { -webkit-tap-highlight-color: transparent; transition: opacity 0.15s ease, transform 0.12s ease; }
-        .et-read-btn:active { transform: scale(0.97); opacity: 0.85; }
-        @media (prefers-reduced-motion: reduce) {
-          .et-node-glow, .et-star, .et-tip, .et-hdr, .et-popup-card { animation: none !important; opacity: 1 !important; }
-        }
-      `}</style>
-
       {/* Fixed background */}
       <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
         <div style={{ position: 'absolute', background: 'linear-gradient(180deg, #0D1B35 0%, #1B1042 52%, #0E0820 100%)', inset: 0 }} />
@@ -144,6 +164,7 @@ export default function ModulesPage() {
       </div>
 
       <div
+        ref={topRef}
         className={outfit.className}
         style={{
           position: 'relative',
@@ -358,38 +379,192 @@ export default function ModulesPage() {
               </button>
             </div>
 
-            {/* Description */}
-            <div style={{
-              background: 'rgba(255,255,255,0.055)',
-              border: '1px solid rgba(255,255,255,0.09)',
-              borderRadius: '18px',
-              padding: '18px',
-              marginBottom: '22px',
-              minHeight: '80px',
-            }}>
-              <p style={{
-                fontSize: '16px', color: 'rgba(210,225,250,0.88)',
-                lineHeight: 1.65, margin: 0,
-              }}>
-                {popupItem.description || 'Enchanted Tools allie imagination et technologie pour créer des personnages qui rapprochent l\'humain et la machine, ouvrant la voie à une robotique plus sensible et expressive.'}
-              </p>
-            </div>
+            {/* Contenu : audio player ou description */}
+            {popupItem.media_type === 'audio' && popupItem.media_url ? (
+              <div style={{ marginBottom: '22px' }}>
+                {/* Element audio caché */}
+                <audio
+                  ref={audioRef}
+                  src={popupItem.media_url}
+                  onTimeUpdate={() => setAudioTime(audioRef.current?.currentTime ?? 0)}
+                  onLoadedMetadata={() => setAudioDur(audioRef.current?.duration ?? 0)}
+                  onEnded={() => setIsPlaying(false)}
+                />
 
-            {/* Bouton J'ai lu */}
+                {/* Instruction */}
+                <p style={{
+                  fontSize: '14px', color: 'rgba(188,205,232,0.7)',
+                  textAlign: 'center', margin: '0 0 18px',
+                }}>
+                  Appuyez sur le bouton pour écouter l&apos;audio
+                </p>
+
+                {/* Player row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  {/* Bouton play/pause */}
+                  <button
+                    type="button"
+                    onClick={togglePlay}
+                    aria-label={isPlaying ? 'Pause' : 'Lecture'}
+                    style={{
+                      flexShrink: 0,
+                      width: '58px', height: '58px', borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #6B4DFF 0%, #00C8FF 100%)',
+                      border: 'none', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 4px 22px rgba(107,77,255,0.45)',
+                      WebkitTapHighlightColor: 'transparent',
+                      transition: 'transform 0.12s ease, box-shadow 0.18s ease',
+                    }}
+                  >
+                    {isPlaying ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                        <rect x="6" y="4" width="4" height="16" rx="1.5"/>
+                        <rect x="14" y="4" width="4" height="16" rx="1.5"/>
+                      </svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="white" style={{ marginLeft: '3px' }}>
+                        <polygon points="5,3 20,12 5,21"/>
+                      </svg>
+                    )}
+                  </button>
+
+                  {/* Barre de progression */}
+                  <div
+                    onClick={seekAudio}
+                    style={{
+                      flex: 1, height: '8px', borderRadius: '4px',
+                      background: 'rgba(255,255,255,0.14)', cursor: 'pointer',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div style={{
+                      width: `${audioDur > 0 ? (audioTime / audioDur) * 100 : 0}%`,
+                      height: '100%',
+                      background: 'rgba(255,255,255,0.75)',
+                      borderRadius: '4px',
+                      transition: 'width 0.1s linear',
+                    }} />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{
+                background: 'rgba(255,255,255,0.055)',
+                border: '1px solid rgba(255,255,255,0.09)',
+                borderRadius: '18px',
+                padding: '18px',
+                marginBottom: '22px',
+                minHeight: '80px',
+              }}>
+                <p style={{
+                  fontSize: '16px', color: 'rgba(210,225,250,0.88)',
+                  lineHeight: 1.65, margin: 0,
+                }}>
+                  {popupItem.description || 'Enchanted Tools allie imagination et technologie pour créer des personnages qui rapprochent l\'humain et la machine, ouvrant la voie à une robotique plus sensible et expressive.'}
+                </p>
+              </div>
+            )}
+
+            {/* Bouton J'ai lu / J'ai terminé */}
             <button
               type="button"
               onClick={() => selectAndClose(popupIndex)}
               className="et-read-btn"
               style={{
                 width: '100%', height: '58px', borderRadius: '999px',
-                background: 'linear-gradient(90deg, #4DD9FF 0%, #00AAFF 100%)',
+                background: '#8B3677',
                 border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
                 fontSize: '17px', fontWeight: 700, color: '#ffffff',
-                boxShadow: '0 0 28px rgba(0,200,255,0.4), 0 4px 16px rgba(0,170,255,0.3)',
+                boxShadow: '0 0 28px rgba(139,54,119,0.45), 0 4px 16px rgba(139,54,119,0.3)',
               }}
             >
-              J&apos;ai lu ✓
+              {popupItem.media_type === 'audio' && popupItem.media_url
+                ? "J'ai terminé l'étape ✓"
+                : "J'ai lu ✓"
+              }
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modale fin de parcours ── */}
+      {isCompleted && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 2rem))',
+            paddingLeft: '16px', paddingRight: '16px',
+            background: 'rgba(6,10,28,0.7)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+          }}
+        >
+          <div
+            className={`et-completion ${outfit.className}`}
+            style={{
+              width: '100%',
+              background: 'linear-gradient(160deg, rgba(20,35,80,0.99) 0%, rgba(28,18,68,0.99) 100%)',
+              border: '1px solid rgba(0,200,255,0.22)',
+              borderRadius: '28px',
+              padding: '28px 20px 24px',
+              boxShadow: '0 24px 64px rgba(0,0,0,0.65)',
+              textAlign: 'center',
+            }}
+          >
+            <h2 style={{
+              fontFamily: '"AcuminVariable", sans-serif',
+              fontSize: '22px', fontWeight: 800,
+              color: '#ffffff', margin: '0 0 10px', lineHeight: 1.2,
+            }}>
+              {c('completion_title', 'Vous avez terminé le parcours !')}
+            </h2>
+            <p style={{
+              fontSize: '14px', color: 'rgba(188,205,232,0.65)',
+              lineHeight: 1.55, margin: '0 0 24px',
+            }}>
+              {c('completion_desc', "Souhaitez-vous découvrir l'autre parcours ?")}
+            </p>
+
+            {/* Bouton autre parcours */}
+            <button
+              type="button"
+              onClick={() => router.push('/parcours')}
+              style={{
+                width: '100%', height: '54px', borderRadius: '999px',
+                background: '#8B3677',
+                border: 'none', cursor: 'pointer',
+                fontSize: '16px', fontWeight: 700, color: '#ffffff',
+                boxShadow: '0 0 24px rgba(139,54,119,0.45)',
+                marginBottom: '12px',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Faire l&apos;autre parcours
+            </button>
+
+            {/* Bouton terminer */}
+            <button
+              type="button"
+              onClick={() => {
+                setCompletionDismissed(true)
+                setTimeout(() => topRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+              }}
+              style={{
+                width: '100%', height: '50px', borderRadius: '999px',
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                cursor: 'pointer',
+                fontSize: '15px', fontWeight: 600,
+                color: 'rgba(188,205,232,0.75)',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Retour au Guide de visite
             </button>
           </div>
         </div>

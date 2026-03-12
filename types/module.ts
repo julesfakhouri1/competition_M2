@@ -26,6 +26,15 @@ export type ModuleWithImages = Module & {
   module_images: ModuleImage[]
 }
 
+export interface ContentEntry {
+  id: string
+  key: string
+  value_fr: string
+  value_en: string
+  section: string
+  updated_at: string
+}
+
 export interface Visitor {
   id: string
   first_name: string
