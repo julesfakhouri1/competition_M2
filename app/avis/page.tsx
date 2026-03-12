@@ -75,7 +75,7 @@ export default function AvisPage() {
             <path d="M19 12H5M12 5l-7 7 7 7"/>
           </svg>
         </button>
-        <span style={{ fontFamily: rajdhani.style.fontFamily, fontSize: '20px', fontWeight: 700, color: '#ffffff' }}>
+        <span style={{ fontFamily: rajdhani.style.fontFamily, fontSize: '26px', fontWeight: 700, color: '#ffffff' }}>
           {locale === 'en' ? 'End of visit' : 'Fin de visite'}
         </span>
       </div>
@@ -87,15 +87,15 @@ export default function AvisPage() {
         <div>
           <p style={{
             fontSize: '11px', fontWeight: 700, letterSpacing: '0.16em',
-            color: 'rgba(188,205,232,0.55)', textTransform: 'uppercase',
-            margin: '0 0 10px',
+            color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase',
+            margin: '0 0 10px', textAlign: 'left',
           }}>
             {locale === 'en' ? 'Your feedback' : 'Votre avis'}
           </p>
           <h1 style={{
             fontFamily: '"AcuminVariable", sans-serif',
             fontSize: '26px', fontWeight: 800,
-            color: '#ffffff', lineHeight: 1.2, margin: 0,
+            color: '#ffffff', lineHeight: 1.2, margin: 0, textAlign: 'left',
           }}>
             {locale === 'en'
               ? 'How did you find the Mirokaï experience?'
@@ -139,19 +139,19 @@ export default function AvisPage() {
               )
             })}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '11px', color: 'rgba(188,205,232,0.45)', fontWeight: 500 }}>
-              {locale === 'en' ? 'Not at all' : 'Pas du tout'}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: 700, textAlign: 'left' }}>
+              {locale === 'en' ? 'Not at all' : 'Vraiment bof'}
             </span>
-            <span style={{ fontSize: '11px', color: 'rgba(188,205,232,0.45)', fontWeight: 500 }}>
-              {locale === 'en' ? 'Very much' : 'Vraiment beaucoup'}
+            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: 700, textAlign: 'right' }}>
+              {locale === 'en' ? 'Very much' : 'Vraiment bonnes'}
             </span>
           </div>
         </div>
 
         {/* Commentaire */}
         <div>
-          <p style={{ fontSize: '14px', color: 'rgba(188,205,232,0.7)', margin: '0 0 10px' }}>
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', margin: '0 0 10px', textAlign: 'left' }}>
             {locale === 'en' ? 'A comment? (optional)' : 'Un commentaire ? (optionnel)'}
           </p>
           <textarea
@@ -175,11 +175,9 @@ export default function AvisPage() {
           />
         </div>
 
-        {submitted && (
-          <p style={{ fontSize: '14px', textAlign: 'center', color: 'rgba(188,205,232,0.7)', margin: 0 }}>
-            {locale === 'en' ? 'Thank you! Your feedback means a lot to us!' : 'Merci ! votre avis compte beaucoup pour nous !'}
-          </p>
-        )}
+        <p style={{ fontSize: '14px', color: '#ffffff', margin: 0, textAlign: 'center' }}>
+          {locale === 'en' ? 'Thank you! Your feedback means a lot to us!' : 'Merci ! votre avis compte beaucoup pour nous !'}
+        </p>
       </div>
 
       {/* Boutons */}
@@ -187,16 +185,16 @@ export default function AvisPage() {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={loading || rating === null}
+          disabled={loading || (rating === null && comment.trim() === '')}
           style={{
             width: '100%', height: '56px', borderRadius: '999px',
             background: '#8B3677',
-            border: 'none', cursor: rating === null ? 'default' : 'pointer',
+            border: 'none', cursor: (rating !== null || comment.trim() !== '') ? 'pointer' : 'default',
             fontSize: '16px', fontWeight: 700, color: '#ffffff',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-            boxShadow: rating !== null ? '0 0 28px rgba(139,54,119,0.45), 0 4px 16px rgba(139,54,119,0.3)' : 'none',
-            opacity: rating === null ? 0.5 : 1,
-            transition: 'opacity 0.2s ease, box-shadow 0.2s ease',
+            boxShadow: '0 0 28px rgba(139,54,119,0.45), 0 4px 16px rgba(139,54,119,0.3)',
+            opacity: (rating !== null || comment.trim() !== '') ? 1 : 0.5,
+            transition: 'opacity 0.2s ease',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
