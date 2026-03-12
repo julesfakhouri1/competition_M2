@@ -283,8 +283,8 @@ export default function ExperiencePage() {
               style={{
                 height: '54px',
                 marginTop: '6px',
-                background: 'linear-gradient(90deg, #00C8FF 0%, #0092F7 100%)',
-                boxShadow: '0 0 28px rgba(0,200,255,0.32), 0 4px 16px rgba(0,146,247,0.25)',
+                background: '#8B3677',
+                boxShadow: '0 0 28px rgba(139,54,119,0.4), 0 4px 16px rgba(139,54,119,0.28)',
                 border: 'none',
               }}
             >

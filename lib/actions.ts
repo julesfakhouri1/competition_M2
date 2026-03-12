@@ -1,29 +1,8 @@
 'use server'
 
-/**
- * SQL à exécuter dans Supabase avant d'utiliser ce fichier :
- *
- * -- Colonne d'ordre pour les modules
- * ALTER TABLE modules ADD COLUMN order_index integer DEFAULT 0;
- * UPDATE modules SET order_index = number;
- *
- * -- Table visiteurs
- * CREATE TABLE visitors (
- *   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
- *   first_name text NOT NULL,
- *   email text NOT NULL,
- *   age text,
- *   activities text[],
- *   created_at timestamptz DEFAULT now()
- * );
- * ALTER TABLE visitors ENABLE ROW LEVEL SECURITY;
- * CREATE POLICY "insert_visitor" ON visitors FOR INSERT WITH CHECK (true);
- * CREATE POLICY "select_visitor" ON visitors FOR SELECT USING (auth.role() = 'authenticated');
- */
-
 import { createClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
-import type { Module, ModuleWithImages, Visitor } from '@/types/module'
+import type { Module, ModuleWithImages, Visitor, ContentEntry } from '@/types/module'
 
 // ── Modules ────────────────────────────────────────────────────────────────
 
@@ -156,8 +135,6 @@ export async function deleteModuleImage(
   revalidatePath(`/admin/dashboard/modules/${moduleId}/edit`)
 }
 
-// ── Visiteurs ──────────────────────────────────────────────────────────────
-
 export async function saveVisitor(data: {
   first_name: string
   email: string
@@ -167,6 +144,33 @@ export async function saveVisitor(data: {
   const supabase = await createClient()
   const { error } = await supabase.from('visitors').insert(data)
   if (error) throw error
+}
+
+
+export async function getContent(): Promise<ContentEntry[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('content')
+    .select('*')
+    .order('section')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function updateContentEntry(
+  key: string,
+  values: { value_fr: string; value_en: string }
+): Promise<void> {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('content')
+    .update({ ...values, updated_at: new Date().toISOString() })
+    .eq('key', key)
+  if (error) throw error
+  revalidatePath('/')
+  revalidatePath('/parcours')
+  revalidatePath('/choix-parcours')
+  revalidatePath('/admin/dashboard/content')
 }
 
 export async function getVisitors(): Promise<Visitor[]> {

@@ -1,9 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Outfit, Rajdhani } from 'next/font/google'
 import { type Locale, getLocaleFromCookie, translations } from '@/lib/i18n'
 import { createClient } from '@/lib/supabase'
+
+type CmsMap = Record<string, { fr: string; en: string }>
 
 const outfit   = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
 const rajdhani = Rajdhani({ subsets: ['latin'], weight: ['600', '700'] })
@@ -40,13 +43,34 @@ function LockIcon() {
 }
 
 export default function ModulesPage() {
+  const router = useRouter()
   const [locale,   setLocale]   = useState<Locale>('fr')
-  const [selected, setSelected] = useState<number[]>([])
+  const [selected, setSelected] = useState<number[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const saved = localStorage.getItem('et_progress')
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
   const [items,    setItems]    = useState<Item[]>([])
   const [popup,    setPopup]    = useState<number | null>(null)
+  const [completionDismissed, setCompletionDismissed] = useState(false)
+  const [cms,      setCms]      = useState<CmsMap>({})
   const nodeRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const topRef   = useRef<HTMLDivElement>(null)
 
   useEffect(() => { setLocale(getLocaleFromCookie()) }, [])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const supabase = createClient()
+        const { data: cmsData } = await supabase.from('content').select('key,value_fr,value_en').in('section', ['guide', 'completion'])
+        if (cmsData) setCms(Object.fromEntries(cmsData.map((e: { key: string; value_fr: string; value_en: string }) => [e.key, { fr: e.value_fr, en: e.value_en }])))
+      } catch {}
+    }
+    load()
+  }, [])
 
   useEffect(() => {
     const load = async () => {
@@ -72,7 +96,12 @@ export default function ModulesPage() {
   }, [])
 
   function selectAndClose(i: number) {
-    setSelected(prev => prev.includes(i) ? prev : [...prev, i])
+    setSelected(prev => {
+      if (prev.includes(i)) return prev
+      const next = [...prev, i]
+      try { localStorage.setItem('et_progress', JSON.stringify(next)) } catch {}
+      return next
+    })
     setPopup(null)
     const nextIndex = i + 1
     if (nextIndex < items.length) {
@@ -82,16 +111,17 @@ export default function ModulesPage() {
     }
   }
 
-  const guideTitle    = locale === 'en' ? 'Visit Guide'      : 'Guide de visite'
-  const guideSubtitle = locale === 'en'
-    ? "Explore the stages to discover the Mirokaï universe"
-    : "Explorez les étapes pour découvrir l'univers des Mirokaï"
+  const c = (key: string, fallback: string) => (locale === 'fr' ? cms[key]?.fr : cms[key]?.en) || fallback
+
+  const guideTitle    = c('guide_title',    locale === 'en' ? 'Visit Guide' : 'Guide de visite')
+  const guideSubtitle = c('guide_subtitle', locale === 'en' ? "Explore the stages to discover the Mirokaï universe" : "Explorez les étapes pour découvrir l'univers des Mirokaï")
 
   const totalHeight = TOP_OFFSET + items.length * SPACING_Y + 64
   const nodeCenterY = (i: number) => TOP_OFFSET + i * SPACING_Y + NODE_SIZE / 2
 
-  const popupIndex = popup ?? -1
-  const popupItem  = popupIndex >= 0 ? items[popupIndex] : null
+  const popupIndex  = popup ?? -1
+  const popupItem   = popupIndex >= 0 ? items[popupIndex] : null
+  const isCompleted = items.length > 0 && selected.length >= items.length && !completionDismissed
 
   return (
     <>
@@ -116,6 +146,11 @@ export default function ModulesPage() {
           from { opacity: 0; transform: translateY(24px) scale(0.96); }
           to   { opacity: 1; transform: translateY(0)    scale(1);    }
         }
+        @keyframes completionIn {
+          from { opacity: 0; transform: translateY(32px) scale(0.95); }
+          to   { opacity: 1; transform: translateY(0)    scale(1);    }
+        }
+        .et-completion { animation: completionIn 0.4s cubic-bezier(0.16,1,0.3,1) both; }
         .et-node { -webkit-tap-highlight-color: transparent; transition: transform 0.12s ease, background 0.25s ease, border-color 0.25s ease; }
         .et-node:active { transform: scale(0.87) !important; }
         .et-node-glow { animation: nodePulse 2.2s ease-in-out infinite; }
@@ -144,6 +179,7 @@ export default function ModulesPage() {
       </div>
 
       <div
+        ref={topRef}
         className={outfit.className}
         style={{
           position: 'relative',
@@ -382,14 +418,95 @@ export default function ModulesPage() {
               className="et-read-btn"
               style={{
                 width: '100%', height: '58px', borderRadius: '999px',
-                background: 'linear-gradient(90deg, #4DD9FF 0%, #00AAFF 100%)',
+                background: '#8B3677',
                 border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
                 fontSize: '17px', fontWeight: 700, color: '#ffffff',
-                boxShadow: '0 0 28px rgba(0,200,255,0.4), 0 4px 16px rgba(0,170,255,0.3)',
+                boxShadow: '0 0 28px rgba(139,54,119,0.45), 0 4px 16px rgba(139,54,119,0.3)',
               }}
             >
               J&apos;ai lu ✓
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modale fin de parcours ── */}
+      {isCompleted && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 2rem))',
+            paddingLeft: '16px', paddingRight: '16px',
+            background: 'rgba(6,10,28,0.7)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+          }}
+        >
+          <div
+            className={`et-completion ${outfit.className}`}
+            style={{
+              width: '100%',
+              background: 'linear-gradient(160deg, rgba(20,35,80,0.99) 0%, rgba(28,18,68,0.99) 100%)',
+              border: '1px solid rgba(0,200,255,0.22)',
+              borderRadius: '28px',
+              padding: '28px 20px 24px',
+              boxShadow: '0 24px 64px rgba(0,0,0,0.65)',
+              textAlign: 'center',
+            }}
+          >
+            <h2 style={{
+              fontFamily: '"AcuminVariable", sans-serif',
+              fontSize: '22px', fontWeight: 800,
+              color: '#ffffff', margin: '0 0 10px', lineHeight: 1.2,
+            }}>
+              {c('completion_title', 'Vous avez terminé le parcours !')}
+            </h2>
+            <p style={{
+              fontSize: '14px', color: 'rgba(188,205,232,0.65)',
+              lineHeight: 1.55, margin: '0 0 24px',
+            }}>
+              {c('completion_desc', "Souhaitez-vous découvrir l'autre parcours ?")}
+            </p>
+
+            {/* Bouton autre parcours */}
+            <button
+              type="button"
+              onClick={() => router.push('/parcours')}
+              style={{
+                width: '100%', height: '54px', borderRadius: '999px',
+                background: '#8B3677',
+                border: 'none', cursor: 'pointer',
+                fontSize: '16px', fontWeight: 700, color: '#ffffff',
+                boxShadow: '0 0 24px rgba(139,54,119,0.45)',
+                marginBottom: '12px',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Faire l&apos;autre parcours
+            </button>
+
+            {/* Bouton terminer */}
+            <button
+              type="button"
+              onClick={() => {
+                setCompletionDismissed(true)
+                setTimeout(() => topRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+              }}
+              style={{
+                width: '100%', height: '50px', borderRadius: '999px',
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                cursor: 'pointer',
+                fontSize: '15px', fontWeight: 600,
+                color: 'rgba(188,205,232,0.75)',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Retour au Guide de visite
             </button>
           </div>
         </div>

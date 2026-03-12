@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Outfit, Rajdhani } from 'next/font/google'
 import LangSwitcher from '@/components/LangSwitcher'
 import { type Locale, getLocaleFromCookie, translations } from '@/lib/i18n'
+import { createClient } from '@/lib/supabase'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800', '900'] })
 const rajdhani = Rajdhani({ subsets: ['latin'], weight: ['600', '700'] })
@@ -13,8 +14,20 @@ const rajdhani = Rajdhani({ subsets: ['latin'], weight: ['600', '700'] })
 export default function LandingPage() {
   const router = useRouter()
   const [locale, setLocale] = useState<Locale>('fr')
+  const [cms, setCms] = useState<Record<string, { fr: string; en: string }>>({})
   useEffect(() => { setLocale(getLocaleFromCookie()) }, [])
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const supabase = createClient()
+        const { data } = await supabase.from('content').select('key,value_fr,value_en').eq('section', 'home')
+        if (data) setCms(Object.fromEntries(data.map((e: { key: string; value_fr: string; value_en: string }) => [e.key, { fr: e.value_fr, en: e.value_en }])))
+      } catch {}
+    }
+    load()
+  }, [])
   const t = translations[locale]
+  const c = (key: string, fallback: string) => (locale === 'fr' ? cms[key]?.fr : cms[key]?.en) || fallback
 
   return (
     <>
@@ -136,24 +149,10 @@ export default function LandingPage() {
           {/* Logo + marque */}
           <div className="flex flex-col items-center">
             <div className="et-logo mb-3">
-              <Image src="/logo_1.svg" alt="Logo Enchanted Tools" width={100} height={100} priority />
+              <Image src="/enchanted_tools.svg" alt="Logo Enchanted Tools" width={28} height={32} priority />
             </div>
             <div className="et-f1 flex flex-col items-center" role="banner">
-              <p style={{
-                fontFamily: rajdhani.style.fontFamily,
-                fontSize: '20px', fontWeight: 700,
-                letterSpacing: '0.22em', color: '#ffffff',
-                textTransform: 'uppercase', margin: 0,
-              }}>
-                Enchanted Tools
-              </p>
-              <p style={{
-                fontSize: '12px', fontWeight: 400,
-                color: 'rgba(188,205,232,0.92)',
-                marginTop: '4px', letterSpacing: '0.06em',
-              }}>
-                {t.baseline}
-              </p>
+              <Image src="/mirokai_experience_logo.svg" alt="Mirokaï Experience" width={130} height={34} priority />
             </div>
           </div>
 
@@ -167,14 +166,14 @@ export default function LandingPage() {
                 lineHeight: '1.18', margin: '0 0 10px',
               }}
             >
-              {t.heroTitle}
+              {c('hero_title', t.heroTitle)}
             </h1>
             <p style={{
               fontSize: '14px', fontWeight: 400,
               color: 'rgba(178,196,228,0.92)',
               lineHeight: '1.6', margin: 0,
             }}>
-              {t.heroDesc}
+              {c('hero_desc', t.heroDesc)}
             </p>
           </section>
 
@@ -207,36 +206,21 @@ export default function LandingPage() {
               type="button"
               className="et-btn-primary w-full"
               aria-label={t.cta}
-              onClick={() => router.push('/parcours')}
+              onClick={() => router.push('/experience')}
               style={{
                 minHeight: '52px',
                 padding: '14px 32px', borderRadius: '999px',
-                background: 'linear-gradient(90deg, #00C8FF 0%, #0092F7 100%)',
-                boxShadow: '0 0 32px rgba(0,200,255,0.38), 0 4px 20px rgba(0,146,247,0.28)',
+                background: '#8B3677',
+                boxShadow: '0 0 32px rgba(139,54,119,0.45), 0 4px 20px rgba(139,54,119,0.3)',
                 color: '#ffffff', fontSize: '16px', fontWeight: 600,
                 fontFamily: 'inherit', border: 'none',
                 letterSpacing: '0.01em',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
               }}
             >
-              {t.cta} <span aria-hidden="true">→</span>
+              {c('hero_cta', t.cta)} <span aria-hidden="true">→</span>
             </button>
 
-            <button
-              type="button"
-              className="et-btn-sec w-full"
-              aria-label={t.games}
-              style={{
-                minHeight: '48px',
-                padding: '13px 16px', borderRadius: '14px',
-                background: 'rgba(255,255,255,0.07)',
-                border: '1px solid rgba(255,255,255,0.11)',
-                color: '#ffffff', fontSize: '15px',
-                fontWeight: 500, fontFamily: 'inherit',
-              }}
-            >
-              {t.games}
-            </button>
           </div>
 
         </div>

@@ -1,14 +1,34 @@
 'use client'
 
 import Image from 'next/image'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Outfit, Rajdhani } from 'next/font/google'
+import { type Locale, getLocaleFromCookie } from '@/lib/i18n'
+import { createClient } from '@/lib/supabase'
 
 const outfit   = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
 const rajdhani = Rajdhani({ subsets: ['latin'], weight: ['600', '700'] })
 
 export default function ParcoursPage() {
   const router = useRouter()
+  const [locale, setLocale] = useState<Locale>('fr')
+  const [cms, setCms] = useState<Record<string, { fr: string; en: string }>>({})
+
+  useEffect(() => { setLocale(getLocaleFromCookie()) }, [])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const supabase = createClient()
+        const { data } = await supabase.from('content').select('key,value_fr,value_en').eq('section', 'parcours')
+        if (data) setCms(Object.fromEntries(data.map((e: { key: string; value_fr: string; value_en: string }) => [e.key, { fr: e.value_fr, en: e.value_en }])))
+      } catch {}
+    }
+    load()
+  }, [])
+
+  const c = (key: string, fallback: string) => (locale === 'fr' ? cms[key]?.fr : cms[key]?.en) || fallback
 
   function choose(parcours: 'univers' | 'techno') {
     if (typeof window !== 'undefined') {
@@ -82,7 +102,7 @@ export default function ParcoursPage() {
             fontSize: '28px', fontWeight: 800,
             color: '#ffffff', lineHeight: 1.15, margin: 0,
           }}>
-            Choisis ton parcours
+            {c('parcours_title', 'Choisis ton parcours')}
           </h1>
         </div>
 
@@ -117,20 +137,20 @@ export default function ParcoursPage() {
                 textTransform: 'uppercase',
                 margin: '0 0 6px',
               }}>
-                Parcours 1
+                {c('card1_label', 'Parcours 1')}
               </p>
               <h2 style={{
                 fontFamily: '"AcuminVariable", sans-serif',
                 fontSize: '24px', fontWeight: 800,
                 color: '#ffffff', lineHeight: 1.15, margin: '0 0 5px',
               }}>
-                L&apos;Univers Mirokaï
+                {c('card1_title', "L'Univers Mirokaï")}
               </h2>
               <p style={{
                 fontSize: '14px', color: 'rgba(188,205,232,0.65)',
                 lineHeight: 1.4, margin: 0,
               }}>
-                Plonge dans l&apos;histoire
+                {c('card1_subtitle', "Plonge dans l'histoire")}
               </p>
             </div>
 
@@ -142,7 +162,7 @@ export default function ParcoursPage() {
               height: '180px',
             }}>
               <Image
-                src="/mirokai.webp"
+                src={c('card1_image_url', '/mirokai.webp')}
                 alt="Personnage Mirokaï"
                 fill
                 style={{ objectFit: 'cover', objectPosition: 'center top' }}
@@ -179,20 +199,20 @@ export default function ParcoursPage() {
                 textTransform: 'uppercase',
                 margin: '0 0 6px',
               }}>
-                Parcours 2
+                {c('card2_label', 'Parcours 2')}
               </p>
               <h2 style={{
                 fontFamily: '"AcuminVariable", sans-serif',
                 fontSize: '24px', fontWeight: 800,
                 color: '#ffffff', lineHeight: 1.15, margin: '0 0 5px',
               }}>
-                La Technologie
+                {c('card2_title', 'La Technologie')}
               </h2>
               <p style={{
                 fontSize: '14px', color: 'rgba(188,205,232,0.65)',
                 lineHeight: 1.4, margin: 0,
               }}>
-                Usages, fabrication, innovations
+                {c('card2_subtitle', 'Usages, fabrication, innovations')}
               </p>
             </div>
 
@@ -204,7 +224,7 @@ export default function ParcoursPage() {
               height: '180px',
             }}>
               <Image
-                src="/miroka.webp"
+                src={c('card2_image_url', '/miroka.webp')}
                 alt="Robot Mirokaï"
                 fill
                 style={{ objectFit: 'cover', objectPosition: 'center top' }}
@@ -222,7 +242,7 @@ export default function ParcoursPage() {
           marginTop: '20px',
           lineHeight: 1.5,
         }}>
-          Tu peux revenir sur l&apos;autre parcours à tout moment.
+          {c('parcours_note', "Tu peux revenir sur l'autre parcours à tout moment.")}
         </p>
       </main>
     </>

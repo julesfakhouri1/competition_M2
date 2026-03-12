@@ -58,6 +58,25 @@ export default async function DashboardPage() {
         <ModuleList modules={modules} />
       </section>
 
+      {/* ── Contenu éditorial ── */}
+      <section>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-base font-semibold text-white">Contenu éditorial</h2>
+            <p className="text-sm mt-0.5" style={{ color: textMuted }}>
+              Textes des pages accueil, parcours, guide de visite
+            </p>
+          </div>
+          <Link
+            href="/admin/dashboard/content"
+            className="text-sm font-semibold px-4 py-2 rounded-xl text-white transition-opacity hover:opacity-90"
+            style={{ background: 'linear-gradient(90deg, #00C8FF 0%, #0092F7 100%)', boxShadow: '0 0 20px rgba(0,200,255,0.25)' }}
+          >
+            Modifier le contenu
+          </Link>
+        </div>
+      </section>
+
       {/* ── Visiteurs ── */}
       <section>
         <div className="mb-6">
