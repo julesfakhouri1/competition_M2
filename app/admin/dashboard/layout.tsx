@@ -34,7 +34,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <LogoutButton />
         </div>
       </header>
-      <main className="p-6">{children}</main>
+      <main className="p-6 md:p-10">
+        <div className="max-w-5xl mx-auto">{children}</div>
+      </main>
     </div>
   )
 }

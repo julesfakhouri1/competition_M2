@@ -9,6 +9,7 @@ export interface Module {
   media_url: string | null
   position_x: number
   position_y: number
+  order_index: number
   created_at: string
   updated_at: string
 }
@@ -23,4 +24,13 @@ export interface ModuleImage {
 
 export type ModuleWithImages = Module & {
   module_images: ModuleImage[]
+}
+
+export interface Visitor {
+  id: string
+  first_name: string
+  email: string
+  age: string | null
+  activities: string[] | null
+  created_at: string
 }

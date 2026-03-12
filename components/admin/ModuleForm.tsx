@@ -47,12 +47,20 @@ export default function ModuleForm({ module }: ModuleFormProps) {
       const supabase = createClient()
       const ext  = file.name.split('.').pop()
       const path = `${Date.now()}.${ext}`
-      const { error: uploadError } = await supabase.storage.from('module-media').upload(path, file, { upsert: true })
-      if (uploadError) throw uploadError
+      const { error: uploadError } = await supabase
+        .storage
+        .from('module-media')
+        .upload(path, file, { upsert: true })
+      if (uploadError) {
+        // Log détaillé pour le debug
+        console.error('Supabase media upload error', uploadError)
+        throw uploadError
+      }
       const { data } = supabase.storage.from('module-media').getPublicUrl(path)
       setMediaUrl(data.publicUrl)
-    } catch {
-      setError("Erreur lors de l'upload du média.")
+    } catch (e: any) {
+      console.error('Erreur lors de l’upload du média', e)
+      setError(`Erreur lors de l'upload du média${e?.message ? ` : ${e.message}` : '.'}`)
     } finally {
       setUploadingMedia(false)
     }
