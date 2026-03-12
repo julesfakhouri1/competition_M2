@@ -549,73 +549,128 @@ export default function ModulesPage() {
         </div>
       )}
 
-      {/* ── Modale fin de parcours ── */}
+      {/* ── Page fin de parcours ── */}
       {isCompleted && (
         <div
           role="dialog"
           aria-modal="true"
+          className={`et-completion ${outfit.className}`}
           style={{
             position: 'fixed', inset: 0, zIndex: 200,
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-            paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 2rem))',
-            paddingLeft: '16px', paddingRight: '16px',
-            background: 'rgba(6,10,28,0.7)',
-            backdropFilter: 'blur(6px)',
-            WebkitBackdropFilter: 'blur(6px)',
+            display: 'flex', flexDirection: 'column',
+            background: 'linear-gradient(180deg, #0D1B35 0%, #1B1042 52%, #0E0820 100%)',
+            paddingTop:    'max(2.5rem, env(safe-area-inset-top,    0px))',
+            paddingBottom: 'max(2rem,   env(safe-area-inset-bottom, 0px))',
+            paddingLeft:   'max(1.25rem, env(safe-area-inset-left,  0px))',
+            paddingRight:  'max(1.25rem, env(safe-area-inset-right, 0px))',
           }}
         >
-          <div
-            className={`et-completion ${outfit.className}`}
-            style={{
-              width: '100%',
-              background: 'linear-gradient(160deg, rgba(20,35,80,0.99) 0%, rgba(28,18,68,0.99) 100%)',
-              border: '1px solid rgba(0,200,255,0.22)',
-              borderRadius: '28px',
-              padding: '28px 20px 24px',
-              boxShadow: '0 24px 64px rgba(0,0,0,0.65)',
-              textAlign: 'center',
-            }}
-          >
-            <h2 style={{ fontFamily: '"AcuminVariable", sans-serif', fontSize: '22px', fontWeight: 800, color: '#ffffff', margin: '0 0 10px', lineHeight: 1.2 }}>
-              {c('completion_title', 'Vous avez terminé le parcours !')}
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '40px' }}>
+            <button
+              onClick={() => setCompletionDismissed(true)}
+              aria-label="Retour"
+              style={{
+                flexShrink: 0,
+                width: '38px', height: '38px', borderRadius: '50%',
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.16)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: '#fff',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+              </svg>
+            </button>
+            <span style={{ fontFamily: rajdhani.style.fontFamily, fontSize: '20px', fontWeight: 700, color: '#ffffff' }}>
+              Fin de parcours
+            </span>
+          </div>
+
+          {/* Contenu centré */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '16px' }}>
+            {/* Icône étoile */}
+            <div style={{
+              width: '80px', height: '80px', borderRadius: '50%',
+              background: 'linear-gradient(135deg, #6B4DFF 0%, #8B3677 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 32px rgba(107,77,255,0.5)',
+              marginBottom: '8px',
+            }}>
+              <StarIcon size={34} />
+            </div>
+
+            <h2 style={{ fontFamily: '"AcuminVariable", sans-serif', fontSize: '28px', fontWeight: 800, color: '#ffffff', margin: 0, lineHeight: 1.15 }}>
+              Parcours terminé !
             </h2>
-            <p style={{ fontSize: '14px', color: 'rgba(188,205,232,0.65)', lineHeight: 1.55, margin: '0 0 24px' }}>
-              {c('completion_desc', "Souhaitez-vous découvrir l'autre parcours ?")}
+
+            <p style={{ fontSize: '15px', color: 'rgba(188,205,232,0.7)', lineHeight: 1.55, margin: 0, maxWidth: '280px' }}>
+              {`Vous avez complété les ${items.length} étapes du parcours ${parcoursType === 'univers' ? "de l'Univers Mirokaï" : 'de la Technologie'}.`}
             </p>
 
+            <p style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', margin: '8px 0 0' }}>
+              Que voulez-vous faire maintenant ?
+            </p>
+          </div>
+
+          {/* Boutons */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <button
               type="button"
               onClick={() => router.push('/parcours')}
               style={{
-                width: '100%', height: '54px', borderRadius: '999px',
+                width: '100%', height: '56px', borderRadius: '999px',
                 background: '#8B3677',
                 border: 'none', cursor: 'pointer',
                 fontSize: '16px', fontWeight: 700, color: '#ffffff',
-                boxShadow: '0 0 24px rgba(139,54,119,0.45)',
-                marginBottom: '12px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                boxShadow: '0 0 28px rgba(139,54,119,0.45), 0 4px 16px rgba(139,54,119,0.3)',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              Faire l&apos;autre parcours
+              {parcoursType === 'univers' ? 'Découvrir la Technologie' : "Découvrir l'Univers Mirokaï"} →
             </button>
 
             <button
               type="button"
               onClick={() => {
+                setSelected([])
+                try { localStorage.removeItem('et_progress') } catch {}
                 setCompletionDismissed(true)
                 setTimeout(() => topRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
               }}
               style={{
-                width: '100%', height: '50px', borderRadius: '999px',
-                background: 'rgba(255,255,255,0.07)',
-                border: '1px solid rgba(255,255,255,0.12)',
+                width: '100%', height: '56px', borderRadius: '999px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1.5px solid rgba(255,255,255,0.18)',
                 cursor: 'pointer',
-                fontSize: '15px', fontWeight: 600,
-                color: 'rgba(188,205,232,0.75)',
+                fontSize: '16px', fontWeight: 600,
+                color: '#ffffff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              Retour au Guide de visite
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+              </svg>
+              Refaire le parcours
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push('/avis')}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: '15px', fontWeight: 600,
+                color: '#8B3677',
+                padding: '8px',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Terminer le parcours
             </button>
           </div>
         </div>
