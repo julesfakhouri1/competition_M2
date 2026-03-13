@@ -206,9 +206,7 @@ export default function ExperiencePage() {
                   className="absolute left-0 right-0 mt-2 z-20 overflow-hidden"
                   role="listbox"
                   style={{
-                    background: 'rgba(14,12,42,0.96)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
+                    background: '#0E0C2A',
                     border: '1px solid rgba(255,255,255,0.1)',
                     borderRadius: '18px',
                   }}
@@ -282,7 +280,7 @@ export default function ExperiencePage() {
       </div>
 
       <p
-        className="relative z-10 text-xs text-center mt-5"
+        className="text-xs text-center mt-5"
         style={{ color: 'rgba(188,205,232,0.38)' }}
       >
         {t.formPrivacy}
