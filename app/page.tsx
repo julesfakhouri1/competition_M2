@@ -33,7 +33,7 @@ export default function LandingPage() {
   return (
     <main
       className={`${outfit.className} relative flex flex-col`}
-      style={{ height: '100dvh', background: 'linear-gradient(180deg, #0D1B35 0%, #1B1042 52%, #0E0820 100%)' }}
+      style={{ height: '100dvh', overflow: 'hidden', background: 'linear-gradient(180deg, #0D1B35 0%, #1B1042 52%, #0E0820 100%)' }}
     >
       <a href="#et-content" className="et-skip">{t.skipLink}</a>
 
